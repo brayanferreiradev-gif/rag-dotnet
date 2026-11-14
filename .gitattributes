@@ -1,0 +1,3 @@
+# Arquivos de apoio não contam nas estatísticas de linguagem do GitHub
+assets/** linguist-documentation
+tests/** linguist-detectable=false
