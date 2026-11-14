@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistente de Documentos · RAG</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1e222b;
+      --border: #2a2f3a;
+      --text: #e6e8ec;
+      --muted: #8b93a3;
+      --accent: #5b8cff;
+      --accent-2: #3d6fe6;
+      --ok: #3ecf8e;
+      --warn: #f5a524;
+      --danger: #f16a6a;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    [v-cloak] { display: none; }
+
+    .app { display: flex; flex-direction: column; height: 100vh; max-width: 860px; margin: 0 auto; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    button {
+      font: inherit; font-size: 13.5px; cursor: pointer; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+      padding: 7px 12px; transition: background .15s ease, border-color .15s ease, opacity .15s ease;
+    }
+    button:hover:not(:disabled) { border-color: #3a4150; background: #252a35; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.primary:hover:not(:disabled) { background: var(--accent-2); border-color: var(--accent-2); }
+    button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .status { font-size: 12.5px; color: var(--muted); padding: 8px 20px 0; min-height: 26px; }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    main { flex: 1; overflow-y: auto; padding: 12px 20px 24px; scroll-behavior: smooth; }
+
+    .empty { text-align: center; margin-top: 12vh; color: var(--muted); }
+    .empty h2 { color: var(--text); font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+    .chips button { border-radius: 999px; font-size: 13px; }
+
+    .msg { display: flex; margin: 14px 0; }
+    .msg.user { justify-content: flex-end; }
+    .bubble {
+      max-width: 82%; padding: 11px 14px; border-radius: var(--radius);
+      white-space: pre-wrap; word-wrap: break-word;
+    }
+    .user .bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+    .assistant .bubble { background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .error .bubble { background: rgba(241,106,106,.08); border: 1px solid rgba(241,106,106,.35); color: #ffc9c9; }
+
+    .meta { margin-top: 10px; font-size: 12.5px; color: var(--muted); white-space: normal; }
+    .rewritten { display: inline-block; margin-bottom: 6px; }
+    .rewritten b { color: var(--warn); font-weight: 600; }
+    details { margin-top: 4px; }
+    summary { cursor: pointer; user-select: none; }
+    .source {
+      margin-top: 8px; padding: 8px 10px; border-radius: 10px;
+      background: var(--panel-2); border: 1px solid var(--border);
+    }
+    .source-head { display: flex; justify-content: space-between; gap: 8px; color: var(--text); font-weight: 550; }
+    .score { font-variant-numeric: tabular-nums; color: var(--ok); font-weight: 500; }
+    .source p { margin: 4px 0 0; }
+
+    .typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+    .typing span {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+      animation: blink 1.2s infinite ease-in-out;
+    }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .typing span { animation: none; opacity: .6; } main { scroll-behavior: auto; } }
+
+    footer { padding: 12px 20px 18px; border-top: 1px solid var(--border); }
+    form { display: flex; gap: 10px; align-items: flex-end; }
+    textarea {
+      flex: 1; resize: none; font: inherit; color: var(--text);
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px 13px; max-height: 160px; min-height: 46px;
+    }
+    textarea::placeholder { color: var(--muted); }
+    .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .bubble { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+<div id="app" class="app" v-cloak>
+  <header>
+    <div class="brand">
+      <h1>Assistente de Documentos</h1>
+      <p>RAG · ASP.NET Core · Ollama · {{ storeLabel }}</p>
+    </div>
+    <div class="actions">
+      <button @click="ingest" :disabled="busy">{{ ingesting ? 'Indexando…' : 'Indexar documentos' }}</button>
+      <button @click="reset" :disabled="busy || messages.length === 0">Nova conversa</button>
+    </div>
+  </header>
+
+  <div class="status" :class="status.kind" role="status" aria-live="polite">{{ status.text }}</div>
+
+  <main ref="scroller" aria-live="polite">
+    <div v-if="messages.length === 0" class="empty">
+      <h2>Pergunte algo sobre os documentos</h2>
+      <div>Clique em <b>Indexar documentos</b> na primeira vez. As respostas vêm só do que está na pasta <code>docs/</code>.</div>
+      <div class="chips">
+        <button v-for="s in suggestions" :key="s" @click="send(s)" :disabled="busy">{{ s }}</button>
+      </div>
+    </div>
+
+    <div v-for="(m, i) in messages" :key="i" class="msg" :class="m.role">
+      <div class="bubble">
+        <div>{{ m.content }}</div>
+
+        <div v-if="m.role === 'assistant' && (m.rewritten || m.sources?.length)" class="meta">
+          <div v-if="m.rewritten" class="rewritten">
+            <b>Buscado como:</b> {{ m.rewritten }}
+          </div>
+          <details v-if="m.sources?.length">
+            <summary>{{ m.sources.length }} {{ m.sources.length === 1 ? 'fonte' : 'fontes' }}</summary>
+            <div v-for="s in m.sources" :key="s.ref" class="source">
+              <div class="source-head">
+                <span>[{{ s.ref }}] {{ s.source }} · trecho {{ s.chunkIndex }}</span>
+                <span class="score" title="Similaridade de cosseno">{{ s.score.toFixed(3) }}</span>
+              </div>
+              <p>{{ s.preview }}</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="asking" class="msg assistant">
+      <div class="bubble" aria-label="Gerando resposta">
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <form @submit.prevent="send()">
+      <textarea
+        ref="input"
+        v-model="draft"
+        rows="1"
+        placeholder="Ex.: Qual o prazo para trocar um eletrônico?"
+        aria-label="Sua pergunta"
+        @keydown.enter.exact.prevent="send()"
+        @input="autoGrow"
+      ></textarea>
+      <button class="primary" type="submit" :disabled="busy || !draft.trim()">Enviar</button>
+    </form>
+    <div class="hint">Enter envia · Shift+Enter quebra linha · a conversa fica só nesta aba</div>
+  </footer>
+</div>
+
+<script>
+const { createApp, nextTick } = Vue;
+
+createApp({
+  data() {
+    return {
+      // Cada mensagem: { role: 'user' | 'assistant' | 'error', content, sources?, rewritten? }
+      messages: [],
+      draft: '',
+      asking: false,
+      ingesting: false,
+      storeLabel: 'Qdrant',
+      status: { text: '', kind: '' },
+      suggestions: [
+        'Qual o prazo para trocar um produto eletrônico?',
+        'O caixa funciona sem internet?',
+        'Em quantas vezes posso parcelar no cartão?',
+      ],
+    };
+  },
+  computed: {
+    busy() { return this.asking || this.ingesting; },
+  },
+  async mounted() {
+    try {
+      const health = await fetch('/health').then(r => r.json());
+      this.storeLabel = health.vectorStore === 'InMemory' ? 'memória' : 'Qdrant';
+    } catch { this.setStatus('API fora do ar?', 'err'); }
+    this.$refs.input.focus();
+  },
+  methods: {
+    setStatus(text, kind = '') { this.status = { text, kind }; },
+
+    async ingest() {
+      this.ingesting = true;
+      this.setStatus('Gerando embeddings e gravando no banco vetorial…');
+      try {
+        const res = await fetch('/ingest/folder', { method: 'POST' });
+        if (!res.ok) throw new Error(await errorText(res));
+        const data = await res.json();
+        this.setStatus(`${data.files} arquivos indexados em ${data.chunks} trechos.`, 'ok');
+      } catch (e) {
+        this.setStatus('Falha ao indexar: ' + e.message, 'err');
+      } finally {
+        this.ingesting = false;
+      }
+    },
+
+    async send(text) {
+      const question = (text ?? this.draft).trim();
+      if (!question || this.busy) return;
+
+      // Histórico = mensagens anteriores válidas (sem erros). A API decide quantas usar.
+      const history = this.messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({ role: m.role, content: m.content }));
+
+      this.messages.push({ role: 'user', content: question });
+      this.draft = '';
+      this.autoGrow();
+      this.asking = true;
+      this.setStatus('');
+      this.scrollDown();
+
+      try {
+        const res = await fetch('/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, history }),
+        });
+        if (!res.ok) throw new Error(await errorText(res));
+        const data = await res.json();
+
+        const rewritten = normalize(data.searchQuery) !== normalize(question) ? data.searchQuery : null;
+        this.messages.push({ role: 'assistant', content: data.answer, sources: data.sources, rewritten });
+      } catch (e) {
+        this.messages.push({ role: 'error', content: 'Erro: ' + e.message });
+      } finally {
+        this.asking = false;
+        this.scrollDown();
+        nextTick(() => this.$refs.input.focus());
+      }
+    },
+
+    reset() {
+      this.messages = [];
+      this.setStatus('Nova conversa iniciada.');
+      this.$refs.input.focus();
+    },
+
+    scrollDown() {
+      nextTick(() => { const el = this.$refs.scroller; el.scrollTop = el.scrollHeight; });
+    },
+
+    autoGrow() {
+      nextTick(() => {
+        const el = this.$refs.input;
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+      });
+    },
+  },
+}).mount('#app');
+
+function normalize(s) { return (s || '').trim().toLowerCase().replace(/[?.!]+$/, ''); }
+
+async function errorText(res) {
+  const body = await res.text();
+  try { return JSON.parse(body).error || JSON.parse(body).detail || body; } catch { return body || res.statusText; }
+}
+</script>
+</body>
+</html>
