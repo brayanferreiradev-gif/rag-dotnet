@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+  @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+
+  :root {
+    --ink: #22252b; --soft: #6b7079; --line: #2b2e35;
+    --yellow: #ffe58a; --blue: #cfe0ff; --green: #c9f0dc; --pink: #ffd6e7; --orange: #ffe0c2;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    width: 1200px; height: 1500px; background: #ffffff; color: var(--ink);
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    padding: 64px 72px 56px; display: flex; flex-direction: column;
+  }
+  .hand { font-family: "Caveat", cursive; }
+  h1 { font-family: "Caveat", cursive; font-weight: 700; font-size: 76px; line-height: 1; letter-spacing: -0.01em; }
+  .mark { background: linear-gradient(transparent 55%, var(--yellow) 55%, var(--yellow) 92%, transparent 92%); padding: 0 6px; }
+  .sub { font-size: 21px; color: var(--soft); margin-top: 18px; line-height: 1.5; max-width: 940px; }
+  .sub b { color: var(--ink); font-weight: 600; }
+
+  h2 { font-family: "Caveat", cursive; font-weight: 700; font-size: 44px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 14px; }
+  h2 small { font-family: "Inter", sans-serif; font-size: 17px; font-weight: 400; color: var(--soft); }
+
+  /* caixa "desenhada à mão" */
+  .node {
+    border: 2.5px solid var(--line);
+    border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+    padding: 16px 20px; background: #fff; text-align: center;
+  }
+  .node .t { font-weight: 650; font-size: 20px; }
+  .node .d { font-size: 15.5px; color: var(--soft); margin-top: 4px; line-height: 1.35; }
+  .bg-blue { background: var(--blue); } .bg-green { background: var(--green); }
+  .bg-pink { background: var(--pink); } .bg-orange { background: var(--orange); } .bg-yellow { background: var(--yellow); }
+
+  section { margin-top: 52px; }
+
+  /* Arquitetura */
+  .arch { position: relative; height: 250px; margin-top: 10px; }
+  .arch .node { position: absolute; }
+  .arch svg { position: absolute; inset: 0; overflow: visible; }
+
+  /* Fluxos em linha */
+  .flow { display: flex; align-items: center; margin-top: 14px; }
+  .flow .node { flex: 1; min-height: 104px; display: flex; flex-direction: column; justify-content: center; }
+  .flow .arrow { width: 54px; flex: none; }
+  .flow .arrow svg { width: 54px; height: 30px; display: block; }
+
+  .note {
+    font-family: "Caveat", cursive; font-weight: 600; font-size: 29px; color: #b5452f; line-height: 1.1;
+  }
+
+  .ask { position: relative; margin-top: 14px; }
+  .row { display: flex; align-items: center; }
+  .row .node { flex: 1; min-height: 104px; display: flex; flex-direction: column; justify-content: center; }
+  .row .arrow { width: 54px; flex: none; }
+  .row .arrow svg { width: 54px; height: 30px; display: block; }
+  .turn { height: 78px; position: relative; }
+  .turn svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; }
+  footer .stack { font-size: 17px; color: var(--soft); }
+  footer .stack b { color: var(--ink); font-weight: 600; }
+  footer .who { font-family: "Caveat", cursive; font-weight: 700; font-size: 34px; }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>Como funciona o <span class="mark">RAG</span> nesse projeto</h1>
+    <p class="sub">Um chat que responde <b>só com base nos documentos</b> que eu dou para ele. Antes de chamar a IA, ele procura os trechos certos e manda junto. Se não acha nada, diz que não sabe em vez de inventar.</p>
+  </header>
+
+  <!-- ARQUITETURA -->
+  <section>
+    <h2>As peças <small>tudo roda no meu computador, de graça</small></h2>
+    <div class="arch">
+      <svg viewBox="0 0 1056 250" preserveAspectRatio="none">
+        <defs>
+          <marker id="h" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse">
+            <path d="M1 1 L10 6 L1 11" fill="none" stroke="#2b2e35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- chat <-> api -->
+        <path d="M252 128 C 290 116, 318 138, 360 126" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" marker-start="url(#h)" marker-end="url(#h)"/>
+        <!-- api -> ollama -->
+        <path d="M652 104 C 700 70, 730 58, 778 56" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" marker-start="url(#h)" marker-end="url(#h)"/>
+        <!-- api -> qdrant -->
+        <path d="M652 152 C 702 186, 730 196, 778 196" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" marker-start="url(#h)" marker-end="url(#h)"/>
+      </svg>
+
+      <div class="node bg-blue" style="left:0; top:72px; width:240px;">
+        <div class="t">Chat no navegador</div>
+        <div class="d">Vue.js</div>
+      </div>
+      <div class="node bg-yellow" style="left:372px; top:62px; width:270px; transform: rotate(-1deg);">
+        <div class="t">API em C#</div>
+        <div class="d">ASP.NET Core · organiza tudo</div>
+      </div>
+      <div class="node bg-orange" style="left:790px; top:0; width:266px; transform: rotate(1deg);">
+        <div class="t">Ollama</div>
+        <div class="d">a IA: cria vetores e escreve a resposta</div>
+      </div>
+      <div class="node bg-pink" style="left:790px; top:146px; width:266px; transform: rotate(-0.8deg);">
+        <div class="t">Qdrant</div>
+        <div class="d">banco vetorial: guarda e busca trechos</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INGESTÃO -->
+  <section>
+    <h2>1. Guardando os documentos <small>feito uma vez</small></h2>
+    <div class="flow">
+      <div class="node"><div class="t">Documento</div><div class="d">manual, FAQ, política…</div></div>
+      <div class="arrow"><svg viewBox="0 0 54 30"><path d="M4 17 C 18 9, 32 21, 46 14" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 7 L47 14 L37 21" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="node"><div class="t">Pedaços</div><div class="d">quebra em trechos de ~800 letras</div></div>
+      <div class="arrow"><svg viewBox="0 0 54 30"><path d="M4 14 C 18 22, 32 8, 46 15" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 8 L47 15 L37 22" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="node"><div class="t">Vetores</div><div class="d">cada trecho vira números que guardam o sentido</div></div>
+      <div class="arrow"><svg viewBox="0 0 54 30"><path d="M4 17 C 18 9, 32 21, 46 14" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 7 L47 14 L37 21" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="node bg-pink"><div class="t">Qdrant</div><div class="d">fica tudo guardado</div></div>
+    </div>
+  </section>
+
+  <!-- PERGUNTA -->
+  <section>
+    <h2>2. Respondendo uma pergunta <small>a cada mensagem</small></h2>
+    <div class="ask">
+      <div class="row">
+        <div class="node bg-blue"><div class="t">Pergunta</div><div class="d">"e com defeito?"</div></div>
+        <div class="arrow"><svg viewBox="0 0 54 30"><path d="M4 17 C 18 9, 32 21, 46 14" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 7 L47 14 L37 21" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="node"><div class="t">Entende o contexto</div><div class="d">usa a conversa: "prazo de troca com defeito?"</div></div>
+        <div class="arrow"><svg viewBox="0 0 54 30"><path d="M4 14 C 18 22, 32 8, 46 15" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 8 L47 15 L37 22" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="node"><div class="t">Busca</div><div class="d">acha os 4 trechos com sentido mais parecido</div></div>
+      </div>
+
+      <div class="turn">
+        <svg viewBox="0 0 1056 78" preserveAspectRatio="none">
+          <path d="M930 4 C 960 40, 930 64, 870 70" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M880 61 L868 70 L881 78" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="note" style="position:absolute; left:250px; top:16px;">não achou nada? responde "não encontrei" ✋</div>
+      </div>
+
+      <div class="row" style="flex-direction: row-reverse;">
+        <div class="node"><div class="t">Monta o pedido</div><div class="d">pergunta + trechos + "use só isso"</div></div>
+        <div class="arrow" style="transform: scaleX(-1);"><svg viewBox="0 0 54 30"><path d="M4 17 C 18 9, 32 21, 46 14" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 7 L47 14 L37 21" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="node bg-orange"><div class="t">IA responde</div><div class="d">com base só nos trechos</div></div>
+        <div class="arrow" style="transform: scaleX(-1);"><svg viewBox="0 0 54 30"><path d="M4 14 C 18 22, 32 8, 46 15" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round"/><path d="M38 8 L47 15 L37 22" fill="none" stroke="#2b2e35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="node bg-green"><div class="t">Resposta + fontes</div><div class="d">"até 90 dias [1]" e de qual arquivo veio</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="stack"><b>C#</b> · .NET 8 · <b>Vue.js</b> · Ollama · <b>Qdrant</b> · Docker</div>
+  </footer>
+</body>
+</html>
