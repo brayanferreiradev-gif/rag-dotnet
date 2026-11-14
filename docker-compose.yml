@@ -1,0 +1,40 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"   # API REST + painel em http://localhost:6333/dashboard
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Tem GPU NVIDIA? Descomente para acelerar o LLM:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  api:
+    build: ./src/RagApi
+    ports:
+      - "5080:8080"
+    environment:
+      Ollama__BaseUrl: http://ollama:11434
+      Qdrant__BaseUrl: http://qdrant:6333
+      Rag__DocsPath: /app/docs
+    volumes:
+      - ./docs:/app/docs:ro
+    depends_on:
+      - qdrant
+      - ollama
+
+volumes:
+  qdrant_data:
+  ollama_data:

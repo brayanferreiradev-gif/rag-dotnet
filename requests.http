@@ -1,0 +1,53 @@
+### Requisições de exemplo (VS Code com a extensão REST Client, Rider ou Visual Studio)
+@api = http://localhost:5080
+
+### Saúde
+GET {{api}}/health
+
+### 1) Indexar todos os documentos da pasta /docs
+POST {{api}}/ingest/folder
+
+### 2) Indexar um texto avulso
+POST {{api}}/ingest
+Content-Type: application/json
+
+{
+  "source": "aviso-estacionamento.txt",
+  "text": "O estacionamento da loja é gratuito por 2 horas para clientes com compra acima de R$ 50,00."
+}
+
+### 3) Perguntas que estão nos documentos
+POST {{api}}/ask
+Content-Type: application/json
+
+{ "question": "Qual o prazo para trocar um produto eletrônico?" }
+
+###
+POST {{api}}/ask
+Content-Type: application/json
+
+{ "question": "O caixa funciona sem internet? E o PIX?" }
+
+###
+POST {{api}}/ask
+Content-Type: application/json
+
+{ "question": "Em quantas vezes posso parcelar no cartão?" }
+
+### 4) Pergunta de continuação, com histórico: a API reescreve antes de buscar
+POST {{api}}/ask
+Content-Type: application/json
+
+{
+  "question": "e se tiver defeito?",
+  "history": [
+    { "role": "user", "content": "Qual o prazo para trocar um produto?" },
+    { "role": "assistant", "content": "Você pode trocar em até 30 dias corridos após a compra [1]." }
+  ]
+}
+
+### 5) Pergunta fora dos documentos: deve responder que não encontrou
+POST {{api}}/ask
+Content-Type: application/json
+
+{ "question": "Qual é a capital da Austrália?" }
