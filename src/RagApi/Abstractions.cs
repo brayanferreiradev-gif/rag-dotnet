@@ -1,0 +1,35 @@
+namespace RagApi;
+
+/// <summary>Transforma texto em vetores (embeddings).</summary>
+public interface IEmbeddingService
+{
+    Task<IReadOnlyList<float[]>> EmbedAsync(IReadOnlyList<string> texts, CancellationToken ct = default);
+}
+
+/// <summary>Gera texto a partir de um prompt de sistema e de uma sequência de mensagens.</summary>
+public interface IChatService
+{
+    Task<string> CompleteAsync(string systemPrompt, IReadOnlyList<ChatTurn> messages, CancellationToken ct = default);
+}
+
+/// <summary>Guarda e busca vetores por similaridade.</summary>
+public interface IVectorStore
+{
+    Task EnsureCollectionAsync(int vectorSize, CancellationToken ct = default);
+    Task DeleteBySourceAsync(string source, CancellationToken ct = default);
+    Task UpsertAsync(IReadOnlyList<ChunkRecord> chunks, CancellationToken ct = default);
+    Task<IReadOnlyList<SearchHit>> SearchAsync(float[] queryVector, int limit, CancellationToken ct = default);
+}
+
+/// <summary>Uma mensagem da conversa. Role: "user" ou "assistant".</summary>
+public sealed record ChatTurn(string Role, string Content)
+{
+    public static ChatTurn User(string content) => new("user", content);
+    public static ChatTurn Assistant(string content) => new("assistant", content);
+}
+
+/// <summary>Um pedaço de documento já com o seu vetor.</summary>
+public sealed record ChunkRecord(string Source, int ChunkIndex, string Text, float[] Vector);
+
+/// <summary>Resultado de uma busca vetorial.</summary>
+public sealed record SearchHit(string Source, int ChunkIndex, string Text, double Score);

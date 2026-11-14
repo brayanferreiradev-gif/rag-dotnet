@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Nenhum pacote NuGet: o projeto usa só o que já vem no ASP.NET Core
+    (HttpClient + System.Text.Json) para falar com o Ollama e o Qdrant via REST.
+    A ideia é enxergar o que um SDK faria por baixo dos panos.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RagApi</RootNamespace>
+  </PropertyGroup>
+
+</Project>
