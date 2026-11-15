@@ -10,6 +10,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>RagApi</RootNamespace>
+    <!-- Chaves de API (opcionais) ficam em "dotnet user-secrets", fora do repositório. -->
+    <UserSecretsId>rag-dotnet-7f3c2a1e</UserSecretsId>
   </PropertyGroup>
 
 </Project>

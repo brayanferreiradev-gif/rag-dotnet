@@ -1,9 +1,13 @@
 namespace RagApi;
 
+/// <summary>O que está sendo transformado em vetor: alguns modelos tratam documento e pergunta de forma diferente.</summary>
+public enum EmbeddingInput { Document, Query }
+
 /// <summary>Transforma texto em vetores (embeddings).</summary>
 public interface IEmbeddingService
 {
-    Task<IReadOnlyList<float[]>> EmbedAsync(IReadOnlyList<string> texts, CancellationToken ct = default);
+    Task<IReadOnlyList<float[]>> EmbedAsync(
+        IReadOnlyList<string> texts, EmbeddingInput input = EmbeddingInput.Document, CancellationToken ct = default);
 }
 
 /// <summary>Gera texto a partir de um prompt de sistema e de uma sequência de mensagens.</summary>

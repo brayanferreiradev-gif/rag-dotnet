@@ -1,46 +1,31 @@
 using RagApi;
-using RagApi.Ai;
+using RagApi.Eval;
 using RagApi.Rag;
-using RagApi.VectorStore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection("Ollama"));
-builder.Services.Configure<QdrantOptions>(builder.Configuration.GetSection("Qdrant"));
-builder.Services.Configure<RagOptions>(builder.Configuration.GetSection("Rag"));
+// Chaves de API ficam fora do código: dotnet user-secrets (só na sua máquina).
+builder.Configuration.AddUserSecrets(typeof(Program).Assembly, optional: true);
 
-var ollamaUrl = new Uri(builder.Configuration["Ollama:BaseUrl"] ?? "http://localhost:11434");
-var qdrantUrl = new Uri(builder.Configuration["Qdrant:BaseUrl"] ?? "http://localhost:6333");
-
-// Cada serviço depende só de uma interface: trocar Ollama por OpenAI,
-// ou Qdrant por pgvector, é escrever outra implementação e mudar uma linha aqui.
-builder.Services.AddHttpClient<IEmbeddingService, OllamaEmbeddingService>(c =>
-{
-    c.BaseAddress = ollamaUrl;
-    c.Timeout = TimeSpan.FromMinutes(2);
-});
-builder.Services.AddHttpClient<IChatService, OllamaChatService>(c =>
-{
-    c.BaseAddress = ollamaUrl;
-    c.Timeout = TimeSpan.FromMinutes(5); // LLM local na CPU pode demorar
-});
-
-// "Qdrant" (padrão) ou "InMemory" (roda sem Docker, os dados somem ao reiniciar).
-var vectorStore = builder.Configuration["VectorStore"] ?? "Qdrant";
-if (vectorStore.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
-    builder.Services.AddSingleton<IVectorStore, InMemoryVectorStore>();
-else
-    builder.Services.AddHttpClient<IVectorStore, QdrantVectorStore>(c => c.BaseAddress = qdrantUrl);
-
-builder.Services.AddScoped<RagService>();
+var providers = builder.Services.AddRag(builder.Configuration);
 
 var app = builder.Build();
+
+// "dotnet run -- eval": roda a avaliação e sai, sem subir o servidor.
+if (args.Length > 0 && args[0].Equals("eval", StringComparison.OrdinalIgnoreCase))
+    return await EvalRunner.RunAsync(app.Services, providers, args.Skip(1).ToArray());
 
 // Tela de chat (wwwroot/index.html) servida pela própria API.
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok", vectorStore }));
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "ok",
+    llm = $"{providers.Llm} ({providers.LlmModel})",
+    embeddings = $"{providers.Embeddings} ({providers.EmbeddingModel})",
+    vectorStore = providers.VectorStore,
+}));
 
 // Indexa um texto enviado no corpo da requisição.
 app.MapPost("/ingest", async (IngestRequest req, RagService rag, CancellationToken ct) =>
@@ -69,6 +54,9 @@ app.MapPost("/ask", async (AskRequest req, RagService rag, CancellationToken ct)
 });
 
 app.Run();
+return 0;
 
 public sealed record IngestRequest(string Source, string Text);
 public sealed record AskRequest(string Question, List<ChatTurn>? History = null);
+
+public partial class Program;
