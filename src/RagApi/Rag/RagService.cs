@@ -24,7 +24,12 @@ public sealed record IngestResult(string Source, int Chunks);
 public sealed record SourceRef(int Ref, string Source, int ChunkIndex, double Score, string Preview);
 
 /// <param name="SearchQuery">A pergunta usada na busca vetorial (reescrita quando há histórico).</param>
-public sealed record AskResult(string Answer, IReadOnlyList<SourceRef> Sources, string SearchQuery);
+public sealed record AskResult(string Answer, IReadOnlyList<SourceRef> Sources, string SearchQuery)
+{
+    /// <summary>Texto completo dos trechos enviados à IA. Fica fora do JSON da API; a avaliação usa para checar fidelidade.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IReadOnlyList<string> Context { get; init; } = [];
+}
 
 /// <summary>
 /// Orquestra os dois fluxos do RAG:
@@ -60,7 +65,7 @@ public sealed partial class RagService(
 
         var vectors = new List<float[]>(chunks.Count);
         foreach (var batch in chunks.Chunk(_opt.EmbeddingBatchSize))
-            vectors.AddRange(await embeddings.EmbedAsync(batch, ct));
+            vectors.AddRange(await embeddings.EmbedAsync(batch, EmbeddingInput.Document, ct));
 
         // A coleção é criada com o tamanho do vetor que o modelo realmente devolve
         // (768 no nomic-embed-text), então trocar de modelo não exige mudar código.
@@ -110,7 +115,7 @@ public sealed partial class RagService(
         // Com histórico, o LLM primeiro reescreve a pergunta de forma completa.
         var searchQuery = recent.Count == 0 ? question : await CondenseQuestionAsync(question, recent, ct);
 
-        var queryVector = (await embeddings.EmbedAsync([searchQuery], ct))[0];
+        var queryVector = (await embeddings.EmbedAsync([searchQuery], EmbeddingInput.Query, ct))[0];
         var hits = (await store.SearchAsync(queryVector, _opt.TopK, ct))
             .Where(h => h.Score >= _opt.MinScore)
             .ToList();
@@ -125,7 +130,7 @@ public sealed partial class RagService(
         var sources = hits.Select((h, i) => new SourceRef(
             i + 1, h.Source, h.ChunkIndex, Math.Round(h.Score, 3), Preview(h.Text))).ToList();
 
-        return new AskResult(answer, sources, searchQuery);
+        return new AskResult(answer, sources, searchQuery) { Context = hits.Select(h => h.Text).ToList() };
     }
 
     private const string CondensePrompt = """
