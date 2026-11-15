@@ -17,9 +17,17 @@ public sealed class OllamaEmbeddingService(HttpClient http, IOptions<OllamaOptio
 {
     private readonly OllamaOptions _opt = options.Value;
 
-    public async Task<IReadOnlyList<float[]>> EmbedAsync(IReadOnlyList<string> texts, CancellationToken ct = default)
+    public async Task<IReadOnlyList<float[]>> EmbedAsync(
+        IReadOnlyList<string> texts, EmbeddingInput input = EmbeddingInput.Document, CancellationToken ct = default)
     {
         if (texts.Count == 0) return [];
+
+        // O nomic-embed-text foi treinado com prefixos que dizem se o texto é documento ou pergunta.
+        if (_opt.EmbeddingModel.Contains("nomic", StringComparison.OrdinalIgnoreCase))
+        {
+            var prefix = input == EmbeddingInput.Query ? "search_query: " : "search_document: ";
+            texts = texts.Select(t => prefix + t).ToList();
+        }
 
         var response = await http.PostAsJsonAsync("/api/embed", new { model = _opt.EmbeddingModel, input = texts }, ct);
         await response.EnsureSuccessWithBodyAsync(ct);
