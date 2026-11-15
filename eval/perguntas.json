@@ -1,0 +1,48 @@
+[
+  { "id": "troca-prazo-geral", "pergunta": "Qual o prazo para trocar um produto?", "fonte": "politica-de-trocas.md", "esperado": "30 dias corridos após a compra, com cupom fiscal ou número do pedido." },
+  { "id": "troca-eletronico", "pergunta": "Comprei um fone de ouvido e me arrependi. Até quando posso trocar?", "fonte": "politica-de-trocas.md", "esperado": "Eletrônicos têm 7 dias para troca por arrependimento." },
+  { "id": "troca-defeito", "pergunta": "Qual o prazo para devolver um produto com defeito de fabricação?", "fonte": "politica-de-trocas.md", "esperado": "Até 90 dias; a loja analisa em até 5 dias úteis." },
+  { "id": "troca-peca-intima", "pergunta": "Posso trocar uma peça íntima que não serviu?", "fonte": "politica-de-trocas.md", "esperado": "Não, peças íntimas só podem ser trocadas em caso de defeito de fabricação." },
+  { "id": "estorno-pix", "pergunta": "Paguei com PIX. Em quanto tempo recebo o estorno?", "fonte": "politica-de-trocas.md", "esperado": "Em até 2 dias úteis, na mesma conta de origem." },
+  { "id": "estorno-cartao", "pergunta": "Quando o estorno no cartão de crédito aparece?", "fonte": "politica-de-trocas.md", "esperado": "Em até duas faturas." },
+  { "id": "estorno-dinheiro", "pergunta": "Como funciona a devolução de uma compra paga em dinheiro?", "fonte": "politica-de-trocas.md", "esperado": "Gera crédito na loja ou devolução no caixa, com autorização do gerente." },
+
+  { "id": "caixa-fundo-troco", "pergunta": "Qual o valor padrão do fundo de troco na abertura do caixa?", "fonte": "manual-do-caixa.md", "esperado": "R$ 200,00." },
+  { "id": "caixa-varias-unidades", "pergunta": "Como lanço várias unidades do mesmo produto no PDV?", "fonte": "manual-do-caixa.md", "esperado": "Digita a quantidade, pressiona asterisco (*) e lê o código do produto." },
+  { "id": "caixa-cancelar-item", "pergunta": "Como cancelo um item antes de finalizar a venda?", "fonte": "manual-do-caixa.md", "esperado": "Pressiona F6 e seleciona o item; acima de R$ 100,00 precisa da senha do supervisor." },
+  { "id": "caixa-parcelamento", "pergunta": "Em quantas vezes posso parcelar no cartão de crédito?", "fonte": "manual-do-caixa.md", "esperado": "Até 6 parcelas sem juros, para compras acima de R$ 300,00." },
+  { "id": "caixa-formas-pagamento", "pergunta": "Dá para pagar uma mesma compra com mais de uma forma de pagamento?", "fonte": "manual-do-caixa.md", "esperado": "Sim, até três formas diferentes na mesma venda." },
+  { "id": "caixa-sangria", "pergunta": "Quando preciso fazer sangria do caixa?", "fonte": "manual-do-caixa.md", "esperado": "Quando passa de R$ 1.000,00 em dinheiro; o supervisor retira o excedente e registra com a senha dele." },
+  { "id": "caixa-fechamento", "pergunta": "Como faço o fechamento do caixa no fim do turno?", "fonte": "manual-do-caixa.md", "esperado": "Pressiona F10, informa os valores contados e imprime o relatório; diferenças acima de R$ 5,00 exigem justificativa por escrito." },
+
+  { "id": "suporte-impressora", "pergunta": "A impressora fiscal parou de imprimir, o que eu faço?", "fonte": "faq-suporte.md", "esperado": "Verificar se está ligada e com papel, testar em Configurações > Periféricos e, se falhar, reiniciar o serviço com Ctrl+Shift+P." },
+  { "id": "suporte-sem-internet", "pergunta": "O sistema caiu a internet. Consigo continuar vendendo?", "fonte": "faq-suporte.md", "esperado": "Sim, em modo contingência por até 24 horas; as vendas sincronizam depois, mas o PIX fica indisponível." },
+  { "id": "suporte-preco", "pergunta": "Como altero o preço de um produto?", "fonte": "faq-suporte.md", "esperado": "Só na retaguarda, em Produtos > Tabela de preços; chega aos caixas em até 10 minutos ou na hora com 'Sincronizar agora'." },
+  { "id": "suporte-horario", "pergunta": "Qual o horário de atendimento do suporte técnico?", "fonte": "faq-suporte.md", "esperado": "Segunda a sábado, das 8h às 20h." },
+
+  {
+    "id": "conversa-defeito",
+    "pergunta": "e se tiver defeito?",
+    "historico": [
+      { "role": "user", "content": "Qual o prazo para trocar um produto?" },
+      { "role": "assistant", "content": "Você pode trocar em até 30 dias corridos após a compra, com o cupom fiscal ou o número do pedido [1]." }
+    ],
+    "fonte": "politica-de-trocas.md",
+    "esperado": "Com defeito de fabricação, o prazo é de até 90 dias."
+  },
+  {
+    "id": "conversa-pix-offline",
+    "pergunta": "e se a internet cair, ainda funciona?",
+    "historico": [
+      { "role": "user", "content": "O caixa aceita PIX?" },
+      { "role": "assistant", "content": "Sim, o PDV aceita PIX via QR Code na tela [1]." }
+    ],
+    "fonte": "faq-suporte.md",
+    "esperado": "Não: no modo contingência (sem internet) o PIX fica indisponível."
+  },
+
+  { "id": "fora-capital", "pergunta": "Qual é a capital da Austrália?", "fonte": null, "esperado": null },
+  { "id": "fora-domingo", "pergunta": "A loja abre aos domingos?", "fonte": null, "esperado": null },
+  { "id": "fora-salario", "pergunta": "Qual o salário de um operador de caixa?", "fonte": null, "esperado": null },
+  { "id": "fora-entrega", "pergunta": "Qual o prazo de entrega das compras feitas pelo site?", "fonte": null, "esperado": null }
+]
