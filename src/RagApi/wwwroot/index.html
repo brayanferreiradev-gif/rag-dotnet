@@ -116,7 +116,7 @@
   <header>
     <div class="brand">
       <h1>Assistente de Documentos</h1>
-      <p>RAG · ASP.NET Core · Ollama · {{ storeLabel }}</p>
+      <p>RAG · ASP.NET Core · {{ llmLabel }} · {{ storeLabel }}</p>
     </div>
     <div class="actions">
       <button @click="ingest" :disabled="busy">{{ ingesting ? 'Indexando…' : 'Indexar documentos' }}</button>
@@ -193,6 +193,7 @@ createApp({
       asking: false,
       ingesting: false,
       storeLabel: 'Qdrant',
+      llmLabel: 'Ollama',
       status: { text: '', kind: '' },
       suggestions: [
         'Qual o prazo para trocar um produto eletrônico?',
@@ -208,6 +209,7 @@ createApp({
     try {
       const health = await fetch('/health').then(r => r.json());
       this.storeLabel = health.vectorStore === 'InMemory' ? 'memória' : 'Qdrant';
+      this.llmLabel = (health.llm || 'Ollama').replace('ClaudeCode', 'Claude');
     } catch { this.setStatus('API fora do ar?', 'err'); }
     this.$refs.input.focus();
   },
