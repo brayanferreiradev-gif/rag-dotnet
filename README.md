@@ -9,7 +9,9 @@ Assistente de chat em **ASP.NET Core 8 + Vue.js** que responde perguntas sobre o
   <img src="assets/prints/03-nao-inventa-resposta.png" width="49%" alt="Responde que não encontrou quando a informação não está nos documentos" />
 </p>
 
-Tudo roda local e de graça: **Qdrant** como banco vetorial e **Ollama** com modelos abertos. Nenhuma chave de API.
+Roda local: **Qdrant** como banco vetorial e **Ollama** com modelos abertos. Para respostas melhores, o LLM pode ser trocado pelo **Claude** (pela sua conta do Claude Code, sem chave de API, ou pela API), e os embeddings pela **Voyage AI**. Tudo por configuração.
+
+Tem também uma **avaliação automática** ([Fase 4](#avaliação-automática)): 24 perguntas com gabarito, e o próprio Claude corrigindo as respostas.
 
 > **Zero pacotes NuGet.** O projeto fala com o Ollama e o Qdrant direto pela API REST, com `HttpClient` e `System.Text.Json`. A ideia é entender o que um SDK como Semantic Kernel faz por baixo dos panos antes de usar um.
 
@@ -42,7 +44,12 @@ flowchart LR
 |---|---|---|
 | Interfaces | `Abstractions.cs` | `IEmbeddingService`, `IChatService`, `IVectorStore`: trocar Ollama por OpenAI ou Qdrant por pgvector é só escrever outra implementação |
 | Chunking | `Rag/TextChunker.cs` | Quebra o texto respeitando parágrafos, com *overlap* para não cortar ideias no meio |
-| Embeddings e LLM | `Ai/OllamaServices.cs` | Chamadas `POST /api/embed` (em lote) e `POST /api/chat` |
+| Embeddings e LLM locais | `Ai/OllamaServices.cs` | Chamadas `POST /api/embed` (em lote) e `POST /api/chat` |
+| Claude pela sua conta | `Ai/ClaudeCodeChatService.cs` | Roda o Claude Code (`claude -p`) sem ferramentas, só como LLM |
+| Claude pela API | `Ai/ClaudeChatService.cs` | `POST /v1/messages` da Anthropic, sem SDK |
+| Embeddings Voyage | `Ai/VoyageEmbeddingService.cs` | `POST /v1/embeddings`, com `input_type` de documento ou pergunta |
+| Montagem | `ServiceRegistration.cs` | Escolhe cada provedor pela configuração |
+| Avaliação | `Eval/EvalRunner.cs` | Roda o gabarito e gera o relatório |
 | Banco vetorial | `VectorStore/QdrantVectorStore.cs` | Cria a coleção, grava os pontos, apaga por documento, busca por similaridade |
 | Banco em memória | `VectorStore/InMemoryVectorStore.cs` | Mesma interface, cosseno calculado à mão: roda sem Docker |
 | Orquestração | `Rag/RagService.cs` | Os dois fluxos: ingestão e pergunta, reescrita da pergunta e o prompt |
@@ -101,6 +108,35 @@ O painel do Qdrant fica em **http://localhost:6333/dashboard**. Lá dá para ver
 
 O arquivo `requests.http` tem todas as chamadas prontas para o VS Code (extensão REST Client), Rider ou Visual Studio.
 
+### Opção 4: com o Claude, pela sua conta (sem chave de API)
+
+Usa o **Claude Code** instalado na sua máquina como LLM, com a conta em que você já está logado. O Ollama fica só com os embeddings, que são leves, e o banco vetorial fica em memória, então **não precisa de Docker**.
+
+1. Instale o [Ollama](https://ollama.com) e baixe o modelo de embeddings: `ollama pull nomic-embed-text`
+2. Instale o [Claude Code](https://code.claude.com/docs/en/setup), rode `claude` uma vez e faça login
+3. Rode:
+
+```bash
+cd src/RagApi
+dotnet run --launch-profile claude-code            # chat em http://localhost:5080
+dotnet run --launch-profile claude-code -- eval    # avaliação
+```
+
+> Por baixo, a API chama `claude -p --output-format json --tools "" --system-prompt ...` e manda a conversa pelo stdin. Sem ferramentas, sem MCP e sem salvar sessão: o Claude Code vira só um LLM. Se instalou o Claude Code pelo npm no Windows, ajuste `ClaudeCode:Command` para `claude.cmd`.
+>
+> Isso é para testes e estudo na sua máquina. Para uma aplicação de verdade, use a API (opção 5).
+
+### Opção 5: Claude e Voyage pela API
+
+```bash
+cd src/RagApi
+dotnet user-secrets set "Claude:ApiKey" "sk-ant-..."
+dotnet user-secrets set "Voyage:ApiKey" "pa-..."
+dotnet run --launch-profile claude-api-voyage
+```
+
+As chaves ficam no **user-secrets** da sua máquina, fora do repositório. As variáveis `ANTHROPIC_API_KEY` e `VOYAGE_API_KEY` também funcionam.
+
 ### Testar sem baixar modelos
 
 `tests/fake_ollama.py` imita a API do Ollama com embeddings simples por palavras e uma "resposta" que só devolve o primeiro trecho do contexto. Serve para testar ingestão, busca e montagem do prompt numa máquina fraca:
@@ -111,6 +147,30 @@ python3 tests/fake_ollama.py 11434
 ```
 
 ---
+
+## Avaliação automática
+
+Mudar o prompt, o tamanho dos chunks ou o modelo pode melhorar ou piorar o RAG, e sem medir é só achismo. Por isso o projeto tem um gabarito em [`eval/perguntas.json`](eval/perguntas.json):
+
+- **20 perguntas com resposta nos documentos**, cada uma com a resposta esperada e o arquivo de onde ela deve sair. Duas são perguntas de continuação ("e se tiver defeito?"), com histórico.
+- **4 perguntas sem resposta** ("A loja abre aos domingos?"), em que o certo é dizer "não encontrei".
+
+```bash
+cd src/RagApi
+dotnet run --launch-profile claude-code -- eval            # com o Claude como juiz
+dotnet run --launch-profile claude-code -- eval --sem-juiz # só busca e recusa, mais rápido
+```
+
+| Métrica | O que mede | Como |
+|---|---|---|
+| **Busca** | O documento certo veio entre os trechos encontrados? | Comparação direta com o gabarito |
+| **Respostas corretas** | A resposta bate com o gabarito? | LLM como juiz |
+| **Fidelidade** | Tudo o que a resposta afirma está nos trechos? | LLM como juiz |
+| **Recusa correta** | Disse "não encontrei" quando a resposta não existe? | Direto, ou juiz quando a IA chegou a responder |
+| **Recusa indevida** | Disse "não encontrei" mas a resposta existia? | Direto |
+| **Tempo** | Quanto demora cada pergunta | Cronômetro |
+
+O relatório sai em `eval/resultados/` como Markdown: o resumo, uma tabela pergunta a pergunta e todas as respostas. Rodando de novo depois de uma mudança, dá para comparar o antes e o depois.
 
 ## Endpoints
 
@@ -138,6 +198,11 @@ Exemplo de resposta do `/ask`:
 
 | Chave | Padrão | Para que serve |
 |---|---|---|
+| `Llm:Provider` | `Ollama` | `Ollama`, `ClaudeCode` (sua conta) ou `Claude` (API) |
+| `Embeddings:Provider` | `Ollama` | `Ollama` ou `Voyage` |
+| `ClaudeCode:Model` | `haiku` | `haiku`, `sonnet` ou `opus` |
+| `Claude:Model` | `claude-haiku-5-5` | Modelo usado pela API |
+| `Voyage:Model` | `voyage-4` | Modelo de embeddings da Voyage |
 | `Ollama:EmbeddingModel` | `nomic-embed-text` | Modelo que gera os vetores |
 | `Ollama:ChatModel` | `llama3.2:3b` | Modelo que escreve a resposta (troque por `qwen2.5:7b` se tiver GPU) |
 | `Rag:ChunkSize` / `ChunkOverlap` | `800` / `150` | Tamanho dos pedaços e quanto um repete do anterior |
@@ -153,14 +218,18 @@ Exemplo de resposta do `/ask`:
 - [ ] **Streaming** da resposta (`stream: true` no Ollama + Server-Sent Events)
 - [ ] **Busca híbrida**: vetores + palavras-chave (BM25), melhor para códigos e nomes próprios
 - [ ] **Reranking** dos trechos antes de mandar ao LLM
-- [ ] **Avaliação**: um conjunto de perguntas com respostas esperadas para medir se mudanças melhoram ou pioram
+- [x] **Avaliação**: gabarito com 24 perguntas e LLM como juiz
+- [x] **Claude** como LLM (pela conta ou pela API) e **Voyage** para embeddings
+- [ ] **Agentes por departamento** (SAC, Caixa, Suporte, Estoque) com skills e ferramentas
+- [ ] **OpenTelemetry**: rastrear cada etapa (reescrita, busca, LLM) com tempos
+- [ ] **Servidor MCP** para outras IAs consultarem os documentos
 - [ ] Segunda implementação de `IVectorStore` com **PostgreSQL + pgvector**
 - [ ] Ler **PDF** além de Markdown e texto
 - [ ] Testes unitários do `TextChunker`
 
 ## Stack
 
-C# · .NET 8 · ASP.NET Core Minimal API · Vue.js 3 · Qdrant · Ollama · Docker Compose
+C# · .NET 8 · ASP.NET Core Minimal API · Vue.js 3 · Qdrant · Ollama · Claude · Voyage AI · Docker Compose
 
 A imagem da arquitetura é gerada a partir de `assets/arquitetura.html` (abra no navegador e tire um print em 1200×1500 se quiser editar).
 
