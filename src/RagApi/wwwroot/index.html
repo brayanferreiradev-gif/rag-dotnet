@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistente de Documentos · RAG</title>
+  <title>Assistente da Loja Exemplo · Agentes + RAG</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
     :root {
@@ -95,6 +95,18 @@
     @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .typing span { animation: none; opacity: .6; } main { scroll-behavior: auto; } }
 
+    .mode { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .mode button { border: 0; border-radius: 0; background: transparent; padding: 7px 12px; }
+    .mode button.on { background: var(--accent); color: #fff; }
+    .agent { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+             color: #c8d6ff; background: rgba(91,140,255,.14); border: 1px solid rgba(91,140,255,.35);
+             border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; white-space: normal; }
+    .agent small { font-weight: 400; color: var(--muted); }
+    .step { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border);
+            font: 12.5px/1.45 ui-monospace, "JetBrains Mono", Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+    .step .tool { color: var(--warn); font-weight: 600; }
+    .step .why { display: block; color: var(--muted); font-family: system-ui, sans-serif; font-style: italic; margin-top: 2px; }
+    .step .obs { display: block; color: #b9c0cc; margin-top: 4px; }
     footer { padding: 12px 20px 18px; border-top: 1px solid var(--border); }
     form { display: flex; gap: 10px; align-items: flex-end; }
     textarea {
@@ -115,10 +127,14 @@
 <div id="app" class="app" v-cloak>
   <header>
     <div class="brand">
-      <h1>Assistente de Documentos</h1>
-      <p>RAG · ASP.NET Core · {{ llmLabel }} · {{ storeLabel }}</p>
+      <h1>Assistente da Loja Exemplo</h1>
+      <p>{{ mode === 'agent' ? 'Agentes com skills' : 'RAG' }} · {{ llmLabel }} · {{ storeLabel }}</p>
     </div>
     <div class="actions">
+      <div class="mode" role="group" aria-label="Modo">
+        <button :class="{ on: mode === 'agent' }" @click="mode = 'agent'" :disabled="busy">Agentes</button>
+        <button :class="{ on: mode === 'rag' }" @click="mode = 'rag'" :disabled="busy">RAG simples</button>
+      </div>
       <button @click="ingest" :disabled="busy">{{ ingesting ? 'Indexando…' : 'Indexar documentos' }}</button>
       <button @click="reset" :disabled="busy || messages.length === 0">Nova conversa</button>
     </div>
@@ -128,18 +144,27 @@
 
   <main ref="scroller" aria-live="polite">
     <div v-if="messages.length === 0" class="empty">
-      <h2>Pergunte algo sobre os documentos</h2>
-      <div>Clique em <b>Indexar documentos</b> na primeira vez. As respostas vêm só do que está na pasta <code>docs/</code>.</div>
+      <h2>{{ mode === 'agent' ? 'Fale com a equipe de agentes' : 'Pergunte algo sobre os documentos' }}</h2>
+      <div v-if="mode === 'agent'">Um roteador escolhe o agente (SAC, Caixa, Suporte ou Estoque), que consulta documentos, estoque, pedidos ou abre chamados.</div>
+      <div v-else>As respostas vêm só do que está na pasta <code>docs/</code>.</div>
+      <div style="margin-top:6px">Clique em <b>Indexar documentos</b> na primeira vez.</div>
       <div class="chips">
-        <button v-for="s in suggestions" :key="s" @click="send(s)" :disabled="busy">{{ s }}</button>
+        <button v-for="s in (mode === 'agent' ? agentSuggestions : suggestions)" :key="s" @click="send(s)" :disabled="busy">{{ s }}</button>
       </div>
     </div>
 
     <div v-for="(m, i) in messages" :key="i" class="msg" :class="m.role">
       <div class="bubble">
+        <div v-if="m.agent" class="agent" :title="m.why">Agente {{ m.agent }} <small v-if="m.why">· {{ m.why }}</small></div>
         <div>{{ m.content }}</div>
 
-        <div v-if="m.role === 'assistant' && (m.rewritten || m.sources?.length)" class="meta">
+        <div v-if="m.role === 'assistant' && (m.rewritten || m.sources?.length || m.steps?.length)" class="meta">
+          <details v-if="m.steps?.length">
+            <summary>{{ m.steps.length }} {{ m.steps.length === 1 ? 'passo' : 'passos' }} do agente · {{ (m.ms / 1000).toFixed(1) }} s</summary>
+            <div v-for="st in m.steps" :key="st.n" class="step"><span class="tool">{{ st.n }}. {{ st.ferramenta }}</span> {{ st.args }}
+<span v-if="st.pensamento" class="why">{{ st.pensamento }}</span>
+<span class="obs">→ {{ st.resultado }}</span></div>
+          </details>
           <div v-if="m.rewritten" class="rewritten">
             <b>Buscado como:</b> {{ m.rewritten }}
           </div>
@@ -194,6 +219,13 @@ createApp({
       ingesting: false,
       storeLabel: 'Qdrant',
       llmLabel: 'Ollama',
+      mode: 'agent',
+      agentSuggestions: [
+        'Tem o fone bluetooth em estoque?',
+        'Qual o status do pedido 10234?',
+        'A maquininha do caixa 2 deu erro de comunicação. Pode abrir um chamado?',
+        'Como faço a sangria do caixa?',
+      ],
       status: { text: '', kind: '' },
       suggestions: [
         'Qual o prazo para trocar um produto eletrônico?',
@@ -248,7 +280,7 @@ createApp({
       this.scrollDown();
 
       try {
-        const res = await fetch('/ask', {
+        const res = await fetch(this.mode === 'agent' ? '/agent' : '/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question, history }),
@@ -256,8 +288,11 @@ createApp({
         if (!res.ok) throw new Error(await errorText(res));
         const data = await res.json();
 
-        const rewritten = normalize(data.searchQuery) !== normalize(question) ? data.searchQuery : null;
-        this.messages.push({ role: 'assistant', content: data.answer, sources: data.sources, rewritten });
+        const rewritten = data.searchQuery && normalize(data.searchQuery) !== normalize(question) ? data.searchQuery : null;
+        this.messages.push({
+          role: 'assistant', content: data.answer, sources: data.sources, rewritten,
+          agent: data.agenteTitulo, why: data.motivoRoteamento, steps: data.steps, ms: data.ms,
+        });
       } catch (e) {
         this.messages.push({ role: 'error', content: 'Erro: ' + e.message });
       } finally {
