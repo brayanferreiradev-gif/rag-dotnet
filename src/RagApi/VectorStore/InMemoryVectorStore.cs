@@ -27,9 +27,11 @@ public sealed class InMemoryVectorStore : IVectorStore
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<SearchHit>> SearchAsync(float[] queryVector, int limit, CancellationToken ct = default)
+    public Task<IReadOnlyList<SearchHit>> SearchAsync(
+        float[] queryVector, int limit, IReadOnlyCollection<string>? sources = null, CancellationToken ct = default)
     {
         IReadOnlyList<SearchHit> hits = _points.Values
+            .Where(p => sources is null || sources.Contains(p.Source))
             .Select(p => new SearchHit(p.Source, p.ChunkIndex, p.Text, Cosine(queryVector, p.Vector)))
             .OrderByDescending(h => h.Score)
             .Take(limit)

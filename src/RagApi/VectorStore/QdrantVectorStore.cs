@@ -62,10 +62,17 @@ public sealed class QdrantVectorStore(HttpClient http, IOptions<QdrantOptions> o
         await response.EnsureSuccessWithBodyAsync(ct);
     }
 
-    public async Task<IReadOnlyList<SearchHit>> SearchAsync(float[] queryVector, int limit, CancellationToken ct = default)
+    public async Task<IReadOnlyList<SearchHit>> SearchAsync(
+        float[] queryVector, int limit, IReadOnlyCollection<string>? sources = null, CancellationToken ct = default)
     {
-        var response = await http.PostAsJsonAsync($"/collections/{_collection}/points/query",
-            new { query = queryVector, limit, with_payload = true }, ct);
+        object body = sources is null
+            ? new { query = queryVector, limit, with_payload = true }
+            : new
+            {
+                query = queryVector, limit, with_payload = true,
+                filter = new { must = new[] { new { key = "source", match = new { any = sources } } } },
+            };
+        var response = await http.PostAsJsonAsync($"/collections/{_collection}/points/query", body, ct);
 
         // Coleção ainda não criada = nada foi indexado ainda.
         if (response.StatusCode == HttpStatusCode.NotFound) return [];
