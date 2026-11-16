@@ -1,0 +1,138 @@
+[
+  {
+    "id": "estoque-fone",
+    "pergunta": "Tem o fone de ouvido Bluetooth Pulse X disponível? Em quais lojas?",
+    "agente": "estoque",
+    "ferramenta": "consultar_estoque",
+    "esperado": "Sim: 12 unidades no Centro e 3 no Bairro Norte; nenhuma no Shopping."
+  },
+  {
+    "id": "estoque-airfryer",
+    "pergunta": "A air fryer Crisp está disponível em alguma loja?",
+    "agente": "estoque",
+    "ferramenta": "consultar_estoque",
+    "esperado": "Não há em nenhuma loja; a previsão de reposição é 02/12/2026."
+  },
+  {
+    "id": "estoque-smartwatch",
+    "pergunta": "Quanto custa o smartwatch Fit 3 e tem na loja do Shopping?",
+    "agente": "estoque",
+    "ferramenta": "consultar_estoque",
+    "esperado": "R$ 599,00; há 7 unidades no Shopping."
+  },
+  {
+    "id": "estoque-geladeira",
+    "pergunta": "Vocês vendem geladeira?",
+    "agente": "estoque",
+    "ferramenta": "consultar_estoque",
+    "esperado": "Não encontrou geladeira no cadastro de produtos/estoque."
+  },
+  {
+    "id": "estoque-transferencia",
+    "pergunta": "Como funciona a transferência de um produto de outra loja?",
+    "agente": "estoque",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Chega em até 3 dias úteis e o cliente pode reservar com sinal de 20% do valor."
+  },
+  {
+    "id": "sac-pedido-10234",
+    "pergunta": "Qual o status do pedido 10234?",
+    "agente": "sac",
+    "ferramenta": "consultar_pedido",
+    "esperado": "Em transporte, com previsão de entrega em 17/11/2026."
+  },
+  {
+    "id": "sac-pedido-10240",
+    "pergunta": "Meu pedido 10240 vai demorar? Comprei uma air fryer.",
+    "agente": "sac",
+    "ferramenta": "consultar_pedido",
+    "esperado": "Está aguardando estoque; previsão de entrega em 05/12/2026."
+  },
+  {
+    "id": "sac-garantia",
+    "pergunta": "Posso contratar a garantia estendida depois que já comprei?",
+    "agente": "sac",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Não: só pode ser contratada no momento da compra, para produtos acima de R$ 500,00."
+  },
+  {
+    "id": "sac-arrependimento",
+    "pergunta": "Comprei um fone há 5 dias e me arrependi. Ainda dá para trocar?",
+    "agente": "sac",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Sim, eletrônicos têm 7 dias para troca por arrependimento (com cupom fiscal ou número do pedido)."
+  },
+  {
+    "id": "sac-assistencia",
+    "pergunta": "Meu smartwatch parou de carregar. Quero acionar a assistência técnica, pode registrar para mim?",
+    "agente": "sac",
+    "ferramenta": "abrir_chamado",
+    "esperado": "Registra um chamado e informa o número de protocolo."
+  },
+  {
+    "id": "caixa-sangria",
+    "pergunta": "Quando e como faço a sangria do caixa?",
+    "agente": "caixa",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Quando o caixa passa de R$ 1.000,00 em dinheiro; chamar o supervisor, que retira o excedente e registra com a senha dele."
+  },
+  {
+    "id": "caixa-pontos",
+    "pergunta": "Como resgato os pontos de fidelidade de um cliente?",
+    "agente": "caixa",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Pressiona F4, confirma o CPF e escolhe o vale; o vale só vale em compras acima de R$ 50,00."
+  },
+  {
+    "id": "caixa-lgpd",
+    "pergunta": "Um cliente quer excluir o cadastro dele. Faço isso pelo caixa?",
+    "agente": "caixa|sac",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Não: o operador deve orientar o cliente a pedir pelo SAC, que tem até 15 dias para concluir."
+  },
+  {
+    "id": "suporte-leitor",
+    "pergunta": "O leitor de código de barras não está lendo nada. O que eu faço?",
+    "agente": "suporte",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Verificar o cabo USB e a luz vermelha, testar com o código de configuração do manual e, se não funcionar, usar o leitor reserva da gerência."
+  },
+  {
+    "id": "suporte-chamado-urgente",
+    "pergunta": "A maquininha deu erro de comunicação e a reserva também não funciona. Abre um chamado urgente.",
+    "agente": "suporte",
+    "ferramenta": "abrir_chamado",
+    "esperado": "Abre chamado com prioridade alta e informa o protocolo; o retorno é em até 30 minutos."
+  },
+  {
+    "id": "suporte-impressora",
+    "pergunta": "A impressora fiscal parou de imprimir.",
+    "agente": "suporte",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Verificar se está ligada e com papel, testar em Configurações > Periféricos e, se falhar, reiniciar o serviço com Ctrl+Shift+P."
+  },
+  {
+    "id": "conversa-troca-tenis",
+    "pergunta": "E quanto tempo eu tenho para fazer essa troca?",
+    "historico": [
+      {
+        "role": "user",
+        "content": "Qual o status do pedido 10245?"
+      },
+      {
+        "role": "assistant",
+        "content": "O pedido 10245 (Tênis de corrida Run 5) está com troca solicitada: você pediu para trocar a numeração 41 pela 42."
+      }
+    ],
+    "agente": "sac",
+    "ferramenta": "buscar_documentos",
+    "esperado": "Até 30 dias corridos após a compra, com cupom fiscal ou número do pedido."
+  },
+  {
+    "id": "fora-cnpj",
+    "pergunta": "Qual o CNPJ da loja?",
+    "agente": null,
+    "ferramenta": null,
+    "esperado": null
+  }
+]
