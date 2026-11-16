@@ -172,6 +172,18 @@ dotnet run --launch-profile claude-code -- eval --sem-juiz # só busca e recusa,
 
 O relatório sai em `eval/resultados/` como Markdown: o resumo, uma tabela pergunta a pergunta e todas as respostas. Rodando de novo depois de uma mudança, dá para comparar o antes e o depois.
 
+### Primeiro resultado (Claude Haiku + nomic-embed-text)
+
+![Resultado da avaliação](assets/prints/07-avaliacao.png)
+
+| Busca | Respostas corretas | Fidelidade | Recusa correta | Recusa indevida | Tempo médio |
+|:-:|:-:|:-:|:-:|:-:|:-:|
+| 100% | 95% | 95% | 4/4 | 0 | 5,9 s |
+
+O único erro foi numa pergunta de continuação ("e se a internet cair, ainda funciona?", depois de perguntar sobre PIX): ele respondeu "sim" e só depois avisou que o PIX fica indisponível. Relatório completo em [`eval/resultados/`](eval/resultados/).
+
+> A base ainda é pequena (3 documentos, 6 trechos, e a busca traz 4), então a busca em 100% é fácil. O próximo passo é aumentar a base para a métrica de busca ficar exigente.
+
 ## Endpoints
 
 | Método | Rota | Corpo | O que faz |
