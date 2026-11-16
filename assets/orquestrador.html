@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face { font-family: JB; src: url(fonts/jetbrains-mono-latin-400-normal.woff2); font-weight: 400; }
+  @font-face { font-family: JB; src: url(fonts/jetbrains-mono-latin-700-normal.woff2); font-weight: 700; }
+  @font-face { font-family: In; src: url(fonts/inter-latin-400-normal.woff2); font-weight: 400; }
+  @font-face { font-family: In; src: url(fonts/inter-latin-600-normal.woff2); font-weight: 600; }
+  @font-face { font-family: In; src: url(fonts/inter-latin-700-normal.woff2); font-weight: 700; }
+  :root { --bg:#0e1014; --card:#161920; --line:#2a2f3a; --text:#e7e9ee; --muted:#8b93a3;
+          --blue:#5b8cff; --green:#3ecf8e; --violet:#a78bfa; --amber:#f5a524; --cyan:#2aacb8; --pink:#f472b6; }
+  * { margin:0; box-sizing:border-box; }
+  body { width:1200px; height:1500px; background:var(--bg); color:var(--text); font-family:In, sans-serif;
+         padding:40px 80px 90px; position:relative; display:flex; flex-direction:column; justify-content:center;
+         background-image: radial-gradient(circle at 50% 0%, rgba(167,139,250,.16), transparent 45%); }
+  .eyebrow { font: 600 17px JB, monospace; color:var(--violet); letter-spacing:.08em; text-transform:uppercase; text-align:center; }
+  h1 { font-size:64px; font-weight:700; letter-spacing:-.025em; margin-top:10px; text-align:center; }
+
+  .q { margin:44px auto 0; width:860px; background:var(--blue); color:#fff; border-radius:22px 22px 6px 22px;
+       padding:20px 26px; font-size:23px; line-height:1.4; font-weight:500; }
+  .q small { display:block; font-size:14px; opacity:.75; font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
+
+  .box { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px 26px; }
+  .head { display:flex; align-items:center; gap:14px; }
+  .n { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; font: 700 20px JB, monospace; flex:none; }
+  .t { font-size:25px; font-weight:600; }
+  .d { font-size:17px; color:var(--muted); margin-top:3px; }
+  pre { font: 15px/1.6 JB, monospace; color:#c9ced8; margin-top:14px; background:#0f1217; border:1px solid var(--line);
+        border-radius:12px; padding:12px 16px; white-space:pre-wrap; }
+  .k { color:var(--violet); } .s { color:#6aab73; }
+
+  .orch { width:1040px; margin:0 auto; border-color:rgba(167,139,250,.5); }
+  svg.links { display:block; margin:0 auto; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:40px; width:1040px; margin:0 auto; }
+  .agent .tool { margin-top:14px; font: 600 15px JB, monospace; color:var(--amber); }
+  .agent .res { margin-top:8px; font-size:17.5px; color:#d6dae2; line-height:1.45; }
+  .tag { font: 600 13px JB, monospace; color:var(--muted); margin-top:6px; }
+
+  .final { width:1040px; margin:0 auto; border-color:rgba(62,207,142,.5);
+           background:linear-gradient(180deg, rgba(62,207,142,.10), rgba(62,207,142,.03)); }
+  .final .ans { font-size:20px; line-height:1.5; margin-top:12px; color:#e7f6ee; }
+
+  footer { position:absolute; bottom:46px; left:0; right:0; text-align:center; font: 15px JB, monospace; color:#5d6575; }
+</style>
+</head>
+<body>
+  <div class="eyebrow">orchestrator-workers · C# · sem framework</div>
+  <h1>Como o orquestrador funciona</h1>
+
+  <div class="q"><small>pergunta do cliente</small>Meu pedido 10240 está demorando. A air fryer tem em alguma loja para eu buscar hoje?</div>
+
+  <svg class="links" width="1040" height="46" viewBox="0 0 1040 46"><path d="M520 4 V42" stroke="#3a4150" stroke-width="2"/><path d="M513 34 L520 43 L527 34" fill="none" stroke="#3a4150" stroke-width="2"/></svg>
+
+  <div class="box orch">
+    <div class="head"><div class="n" style="background:rgba(167,139,250,.16);color:var(--violet)">1</div>
+      <div><div class="t">Orquestrador planeja</div><div class="d">lê a descrição de cada skill e divide a pergunta em tarefas</div></div></div>
+<pre>{ <span class="k">"tarefas"</span>: [
+  { <span class="k">"agente"</span>: <span class="s">"sac"</span>,     <span class="k">"tarefa"</span>: <span class="s">"Status do pedido 10240"</span> },
+  { <span class="k">"agente"</span>: <span class="s">"estoque"</span>, <span class="k">"tarefa"</span>: <span class="s">"Air fryer Crisp disponível em alguma loja?"</span> } ] }</pre>
+  </div>
+
+  <svg class="links" width="1040" height="70" viewBox="0 0 1040 70">
+    <path d="M520 2 V22 H260 V62 M520 22 H780 V62" fill="none" stroke="#3a4150" stroke-width="2"/>
+    <path d="M253 54 L260 63 L267 54 M773 54 L780 63 L787 54" fill="none" stroke="#3a4150" stroke-width="2"/>
+    <text x="536" y="46" fill="#8b93a3" font-family="JB, monospace" font-size="14">em paralelo</text>
+  </svg>
+
+  <div class="cols">
+    <div class="box agent" style="border-color:rgba(91,140,255,.45)">
+      <div class="head"><div class="n" style="background:rgba(91,140,255,.16);color:var(--blue)">2</div>
+        <div><div class="t">Agente SAC</div><div class="tag">skills/sac.md</div></div></div>
+      <div class="tool">→ consultar_pedido("10240")</div>
+      <div class="res">Aguardando estoque · entrega prevista para 05/12</div>
+    </div>
+    <div class="box agent" style="border-color:rgba(42,172,184,.45)">
+      <div class="head"><div class="n" style="background:rgba(42,172,184,.16);color:var(--cyan)">2</div>
+        <div><div class="t">Agente Estoque</div><div class="tag">skills/estoque.md</div></div></div>
+      <div class="tool">→ consultar_estoque("air fryer")</div>
+      <div class="res">0 unidades nas 3 lojas · reposição prevista para 02/12</div>
+    </div>
+  </div>
+
+  <svg class="links" width="1040" height="70" viewBox="0 0 1040 70">
+    <path d="M260 2 V40 H780 V2 M520 40 V64" fill="none" stroke="#3a4150" stroke-width="2"/>
+    <path d="M513 56 L520 65 L527 56" fill="none" stroke="#3a4150" stroke-width="2"/>
+  </svg>
+
+  <div class="box final">
+    <div class="head"><div class="n" style="background:rgba(62,207,142,.16);color:var(--green)">3</div>
+      <div><div class="t">Síntese</div><div class="d">junta as respostas, sem acrescentar nenhum fato</div></div></div>
+    <div class="ans">"Seu pedido está aguardando estoque, com entrega prevista para 05/12. Por enquanto a air fryer não está disponível em nenhuma loja; a reposição está prevista para 02/12."</div>
+  </div>
+
+  <footer>4 agentes · 4 ferramentas · Claude Haiku · .NET 8</footer>
+</body>
+</html>
