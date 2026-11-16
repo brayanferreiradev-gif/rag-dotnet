@@ -22,7 +22,9 @@ public interface IVectorStore
     Task EnsureCollectionAsync(int vectorSize, CancellationToken ct = default);
     Task DeleteBySourceAsync(string source, CancellationToken ct = default);
     Task UpsertAsync(IReadOnlyList<ChunkRecord> chunks, CancellationToken ct = default);
-    Task<IReadOnlyList<SearchHit>> SearchAsync(float[] queryVector, int limit, CancellationToken ct = default);
+    /// <param name="sources">Se informado, busca só nesses documentos (usado para cada agente ver só os do seu departamento).</param>
+    Task<IReadOnlyList<SearchHit>> SearchAsync(
+        float[] queryVector, int limit, IReadOnlyCollection<string>? sources = null, CancellationToken ct = default);
 }
 
 /// <summary>Uma mensagem da conversa. Role: "user" ou "assistant".</summary>

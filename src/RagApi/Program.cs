@@ -1,4 +1,5 @@
 using RagApi;
+using RagApi.Agents;
 using RagApi.Eval;
 using RagApi.Rag;
 
@@ -12,8 +13,11 @@ var providers = builder.Services.AddRag(builder.Configuration);
 var app = builder.Build();
 
 // "dotnet run -- eval": roda a avaliação e sai, sem subir o servidor.
+// "dotnet run -- eval --agentes": avalia a equipe de agentes (roteamento, ferramentas, respostas).
 if (args.Length > 0 && args[0].Equals("eval", StringComparison.OrdinalIgnoreCase))
-    return await EvalRunner.RunAsync(app.Services, providers, args.Skip(1).ToArray());
+    return args.Contains("--agentes")
+        ? await AgentEvalRunner.RunAsync(app.Services, providers)
+        : await EvalRunner.RunAsync(app.Services, providers, args.Skip(1).ToArray());
 
 // Tela de chat (wwwroot/index.html) servida pela própria API.
 app.UseDefaultFiles();
@@ -52,6 +56,22 @@ app.MapPost("/ask", async (AskRequest req, RagService rag, CancellationToken ct)
 
     return Results.Ok(await rag.AskAsync(req.Question.Trim(), req.History, ct));
 });
+
+// Pergunta para a equipe de agentes: o roteador escolhe o especialista, que usa ferramentas.
+app.MapPost("/agent", async (AskRequest req, AgentRunner agents, CancellationToken ct) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Question))
+        return Results.BadRequest(new { error = "Informe 'question'." });
+
+    return Results.Ok(await agents.RunAsync(req.Question.Trim(), req.History, ct));
+});
+
+// Lista as skills carregadas (nome, descrição, documentos e ferramentas de cada agente).
+app.MapGet("/agents", (SkillLibrary skills) =>
+    skills.Skills.Select(s => new { s.Nome, s.Titulo, s.Descricao, s.Documentos, s.Ferramentas }));
+
+// Chamados abertos pelos agentes nesta execução.
+app.MapGet("/chamados", (StoreData data) => data.Chamados);
 
 app.Run();
 return 0;

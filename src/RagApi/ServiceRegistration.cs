@@ -1,3 +1,4 @@
+using RagApi.Agents;
 using RagApi.Ai;
 using RagApi.Rag;
 using RagApi.VectorStore;
@@ -91,6 +92,16 @@ public static class ServiceRegistration
                 c.BaseAddress = new Uri(config["Qdrant:BaseUrl"] ?? "http://localhost:6333"));
 
         services.AddScoped<RagService>();
+
+        // ---- Agentes: skills (uma por departamento), ferramentas e o loop ----
+        services.Configure<AgentOptions>(config.GetSection("Agents"));
+        services.AddSingleton<SkillLibrary>();
+        services.AddSingleton<StoreData>();
+        services.AddScoped<IAgentTool, BuscarDocumentosTool>();
+        services.AddScoped<IAgentTool, ConsultarEstoqueTool>();
+        services.AddScoped<IAgentTool, ConsultarPedidoTool>();
+        services.AddScoped<IAgentTool, AbrirChamadoTool>();
+        services.AddScoped<AgentRunner>();
 
         return new Providers(llm, llmModel, embeddings, embeddingModel, vectorStore);
     }
