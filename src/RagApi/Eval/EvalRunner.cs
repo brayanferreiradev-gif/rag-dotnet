@@ -77,6 +77,13 @@ public static class EvalRunner
             {
                 items.Add(new EvalItem(q, "", "", null, "Erro", null, null, 0, ex.Message));
                 Console.WriteLine($"ERRO: {ex.Message}");
+
+                // Erro de configuração (login, executável, chave) se repete em todas: melhor parar já.
+                if (IsSetupError(ex) || items.TakeLast(3).Count(x => x.Status == "Erro") == 3)
+                {
+                    Console.WriteLine("\nAvaliação interrompida: corrija o erro acima e rode de novo. Nenhum relatório foi gerado.");
+                    return 1;
+                }
             }
         }
 
@@ -153,6 +160,10 @@ public static class EvalRunner
         return new EvalItem(q, result.Answer, result.SearchQuery, buscaOk, correta == true ? "Correta" : "Errada",
             correta, v.GetBool("fiel"), sw.ElapsedMilliseconds, v.Motivo);
     }
+
+    private static bool IsSetupError(Exception ex) =>
+        Regex.IsMatch(ex.Message, @"log ?in|/login|Não encontrei o Claude Code|não configurada|401|403|connection refused|recusou a conexão",
+            RegexOptions.IgnoreCase);
 
     // ---------- Juiz ----------
 
