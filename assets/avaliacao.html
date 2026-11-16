@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<style>
+  @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+  @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+  :root { --ink:#22252b; --soft:#6b7079; --line:#2b2e35;
+          --yellow:#ffe58a; --blue:#cfe0ff; --green:#c9f0dc; --pink:#ffd6e7; --orange:#ffe0c2; }
+  * { box-sizing: border-box; margin: 0; }
+  body { width:1200px; height:1180px; background:#fff; color:var(--ink);
+         font-family:"Inter","Segoe UI",system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+         padding:64px 72px 56px; display:flex; flex-direction:column; }
+  h1 { font-family:"Caveat",cursive; font-weight:700; font-size:72px; line-height:1.02; }
+  .mark { background:linear-gradient(transparent 55%, var(--yellow) 55%, var(--yellow) 92%, transparent 92%); padding:0 6px; }
+  .sub { font-size:21px; color:var(--soft); margin-top:16px; line-height:1.5; max-width:980px; }
+  .sub b { color:var(--ink); font-weight:600; }
+  .node { border:2.5px solid var(--line); border-radius:255px 18px 225px 18px / 18px 225px 18px 255px; background:#fff; }
+
+  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; margin-top:44px; }
+  .metric { padding:24px 22px 20px; text-align:center; }
+  .metric .v { font-family:"Caveat",cursive; font-weight:700; font-size:84px; line-height:1; }
+  .metric .t { font-weight:650; font-size:20px; margin-top:6px; }
+  .metric .d { color:var(--soft); font-size:15.5px; margin-top:4px; line-height:1.35; }
+  .bg-green{background:var(--green)} .bg-blue{background:var(--blue)} .bg-yellow{background:var(--yellow)}
+  .bg-pink{background:var(--pink)} .bg-orange{background:var(--orange)}
+
+  h2 { font-family:"Caveat",cursive; font-weight:700; font-size:42px; margin:44px 0 12px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .card { padding:20px 22px; }
+  .card .k { font-family:"Caveat",cursive; font-weight:700; font-size:28px; }
+  .q { font-weight:650; font-size:18px; margin-top:6px; }
+  .a { font-size:16px; color:#3a3e46; margin-top:8px; line-height:1.45; }
+  .a i { color:var(--soft); }
+  .why { font-family:"Caveat",cursive; font-weight:600; font-size:25px; color:#b5452f; margin-top:10px; line-height:1.1; }
+
+  footer { margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; font-size:17px; color:var(--soft); }
+  footer b { color:var(--ink); font-weight:600; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Medindo o <span class="mark">RAG</span> com o Claude como juiz</h1>
+    <p class="sub"><b>24 perguntas com gabarito</b>: 20 que estão nos documentos da loja (2 delas de continuação, tipo "e se tiver defeito?") e <b>4 pegadinhas</b> sem resposta. O próprio Claude corrigiu cada resposta.</p>
+  </header>
+
+  <div class="grid">
+    <div class="node metric bg-green"><div class="v">100%</div><div class="t">Busca</div><div class="d">o documento certo veio nos trechos encontrados</div></div>
+    <div class="node metric bg-blue" style="transform:rotate(-0.6deg)"><div class="v">95%</div><div class="t">Respostas corretas</div><div class="d">19 de 20 bateram com o gabarito</div></div>
+    <div class="node metric bg-yellow" style="transform:rotate(0.6deg)"><div class="v">95%</div><div class="t">Fidelidade</div><div class="d">não inventou nada além dos trechos</div></div>
+    <div class="node metric bg-pink" style="transform:rotate(0.5deg)"><div class="v">4/4</div><div class="t">Pegadinhas</div><div class="d">disse "não encontrei" quando não sabia</div></div>
+    <div class="node metric"><div class="v">0</div><div class="t">Recusas indevidas</div><div class="d">nunca negou algo que estava nos docs</div></div>
+    <div class="node metric bg-orange" style="transform:rotate(-0.5deg)"><div class="v">5,9s</div><div class="t">Por pergunta</div><div class="d">busca + resposta, em média</div></div>
+  </div>
+
+  <h2>O que mais me ensinou</h2>
+  <div class="cards">
+    <div class="node card">
+      <div class="k">✗ o único erro</div>
+      <div class="q">"O caixa aceita PIX?" → "e se a internet cair, ainda funciona?"</div>
+      <div class="a">Respondeu <i>"Sim, funciona normalmente"</i> e só depois avisou que o PIX fica indisponível.</div>
+      <div class="why">pergunta de continuação é onde o RAG mais sofre</div>
+    </div>
+    <div class="node card">
+      <div class="k">✓ a pegadinha mais difícil</div>
+      <div class="q">"A loja abre aos domingos?"</div>
+      <div class="a">Não caiu: viu que o horário de seg. a sáb. nos documentos é do <i>suporte técnico</i>, não da loja, e disse que não encontrou.</div>
+      <div class="why">saber dizer "não sei" vale ouro</div>
+    </div>
+  </div>
+
+  <footer>
+    <div><b>Claude Haiku</b> (respostas e juiz) · <b>nomic-embed-text</b> (vetores) · <b>C# / .NET 8</b></div>
+    <div>base pequena: 3 documentos fictícios</div>
+  </footer>
+</body>
+</html>
