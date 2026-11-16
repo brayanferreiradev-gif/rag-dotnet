@@ -129,6 +129,27 @@
     "esperado": "Até 30 dias corridos após a compra, com cupom fiscal ou número do pedido."
   },
   {
+    "id": "multi-pedido-estoque",
+    "pergunta": "Meu pedido 10240 está demorando. A air fryer Crisp tem em alguma loja para eu buscar hoje?",
+    "agente": "sac+estoque",
+    "ferramenta": "consultar_pedido",
+    "esperado": "O pedido 10240 está aguardando estoque, com previsão de entrega em 05/12/2026; a air fryer está sem estoque em todas as lojas, com reposição prevista para 02/12/2026."
+  },
+  {
+    "id": "multi-smartwatch-garantia",
+    "pergunta": "Quero comprar o smartwatch Fit 3 com garantia estendida de 24 meses. Tem na loja do Shopping e quanto custa a garantia?",
+    "agente": "estoque+sac",
+    "ferramenta": "consultar_estoque",
+    "esperado": "Há 7 unidades no Shopping, a R$ 599,00; a garantia estendida de 24 meses custa 18% do valor (cerca de R$ 107,82) e precisa ser contratada na compra."
+  },
+  {
+    "id": "multi-maquininha-pix",
+    "pergunta": "A maquininha travou com erro de comunicação e não temos reserva. Abre um chamado e me diz: o cliente pode pagar com PIX?",
+    "agente": "suporte+caixa",
+    "ferramenta": "abrir_chamado",
+    "esperado": "Abre um chamado de prioridade alta com protocolo (retorno em até 30 minutos) e informa que o PDV aceita PIX via QR Code na tela."
+  },
+  {
     "id": "fora-cnpj",
     "pergunta": "Qual o CNPJ da loja?",
     "agente": null,
