@@ -130,7 +130,13 @@ public sealed class ClaudeCodeChatService(IOptions<ClaudeCodeOptions> options, I
             var result = root.TryGetProperty("result", out var r) ? r.GetString() : null;
 
             if (isError || string.IsNullOrWhiteSpace(result))
-                throw new InvalidOperationException($"O Claude Code retornou erro: {Trim(result ?? stdout)}");
+            {
+                var detail = Trim(result ?? stdout);
+                if (detail.Contains("logged in", StringComparison.OrdinalIgnoreCase) || detail.Contains("/login"))
+                    throw new InvalidOperationException(
+                        "O Claude Code não está logado. Abra um terminal, rode 'claude', digite /login e entre com sua conta.");
+                throw new InvalidOperationException($"O Claude Code retornou erro: {detail}");
+            }
 
             if (root.TryGetProperty("total_cost_usd", out var cost) && cost.ValueKind == JsonValueKind.Number)
                 logger.LogDebug("Claude Code: custo equivalente US$ {Cost}", cost.GetDouble());
