@@ -5,73 +5,111 @@
 <style>
   @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
   @font-face { font-family: "Caveat"; src: url("fonts/caveat-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
-  :root { --ink:#22252b; --soft:#6b7079; --line:#2b2e35;
-          --yellow:#ffe58a; --blue:#cfe0ff; --green:#c9f0dc; --pink:#ffd6e7; --orange:#ffe0c2; }
-  * { box-sizing: border-box; margin: 0; }
-  body { width:1200px; height:1180px; background:#fff; color:var(--ink);
+  :root { --ink:#1f2228; --soft:#6b7079; --line:#2b2e35;
+          --yellow:#ffe58a; --blue:#cfe0ff; --green:#c9f0dc; --pink:#ffd6e7; --orange:#ffe0c2; --red:#ffc9c2;
+          --g:#2f9e6a; --r:#d0453a; --p:#c2457f; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1200px; height:1500px; background:#fff; color:var(--ink);
          font-family:"Inter","Segoe UI",system-ui,sans-serif; -webkit-font-smoothing:antialiased;
-         padding:64px 72px 56px; display:flex; flex-direction:column; }
-  h1 { font-family:"Caveat",cursive; font-weight:700; font-size:72px; line-height:1.02; }
-  .mark { background:linear-gradient(transparent 55%, var(--yellow) 55%, var(--yellow) 92%, transparent 92%); padding:0 6px; }
-  .sub { font-size:21px; color:var(--soft); margin-top:16px; line-height:1.5; max-width:980px; }
+         padding:70px 76px 60px; display:flex; flex-direction:column; }
+  .hand { font-family:"Caveat",cursive; }
+  .eyebrow { font-family:"Caveat",cursive; font-weight:700; font-size:32px; color:var(--soft); }
+  h1 { font-family:"Caveat",cursive; font-weight:700; font-size:92px; line-height:.98; margin-top:6px; letter-spacing:-.5px; }
+  .mark { background:linear-gradient(transparent 55%, var(--yellow) 55%, var(--yellow) 90%, transparent 90%); padding:0 8px; }
+  .sub { font-size:22px; color:var(--soft); margin-top:18px; line-height:1.45; }
   .sub b { color:var(--ink); font-weight:600; }
   .node { border:2.5px solid var(--line); border-radius:255px 18px 225px 18px / 18px 225px 18px 255px; background:#fff; }
 
-  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; margin-top:44px; }
-  .metric { padding:24px 22px 20px; text-align:center; }
-  .metric .v { font-family:"Caveat",cursive; font-weight:700; font-size:84px; line-height:1; }
-  .metric .t { font-weight:650; font-size:20px; margin-top:6px; }
-  .metric .d { color:var(--soft); font-size:15.5px; margin-top:4px; line-height:1.35; }
-  .bg-green{background:var(--green)} .bg-blue{background:var(--blue)} .bg-yellow{background:var(--yellow)}
-  .bg-pink{background:var(--pink)} .bg-orange{background:var(--orange)}
+  /* Destaque + métricas */
+  .top { display:grid; grid-template-columns: 1.15fr 1fr; gap:24px; margin-top:44px; }
+  .hero { background:var(--green); padding:34px 30px; display:flex; flex-direction:column; justify-content:center; transform:rotate(-0.7deg); }
+  .hero .v { font-family:"Caveat",cursive; font-weight:700; font-size:170px; line-height:.85; }
+  .hero .t { font-size:26px; font-weight:650; margin-top:12px; }
+  .hero .d { font-size:18px; color:#3d4a43; margin-top:6px; }
+  .side { display:grid; grid-template-rows:repeat(4,1fr); gap:14px; }
+  .mini { display:flex; align-items:center; gap:18px; padding:12px 22px; }
+  .mini .v { font-family:"Caveat",cursive; font-weight:700; font-size:54px; min-width:118px; line-height:1; }
+  .mini .t { font-weight:650; font-size:18.5px; }
+  .mini .d { font-size:14.5px; color:var(--soft); margin-top:2px; }
 
-  h2 { font-family:"Caveat",cursive; font-weight:700; font-size:42px; margin:44px 0 12px; }
-  .cards { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
-  .card { padding:20px 22px; }
-  .card .k { font-family:"Caveat",cursive; font-weight:700; font-size:28px; }
-  .q { font-weight:650; font-size:18px; margin-top:6px; }
-  .a { font-size:16px; color:#3a3e46; margin-top:8px; line-height:1.45; }
-  .a i { color:var(--soft); }
-  .why { font-family:"Caveat",cursive; font-weight:600; font-size:25px; color:#b5452f; margin-top:10px; line-height:1.1; }
+  /* Bolinhas */
+  h2 { font-family:"Caveat",cursive; font-weight:700; font-size:44px; margin:46px 0 4px; display:flex; align-items:baseline; gap:14px; }
+  h2 small { font-family:"Inter",sans-serif; font-size:17px; font-weight:400; color:var(--soft); }
+  .dots { display:grid; grid-template-columns:repeat(12, 1fr); gap:14px 12px; margin-top:16px; }
+  .dot { aspect-ratio:1; border-radius:50% 46% 52% 48% / 48% 52% 46% 50%; border:2.5px solid var(--line);
+         display:grid; place-items:center; font-weight:800; font-size:26px; }
+  .ok { background:var(--green); color:var(--g); }
+  .no { background:var(--red); color:var(--r); }
+  .trap { background:var(--pink); color:var(--p); }
+  .legend { display:flex; gap:28px; margin-top:16px; font-size:16.5px; color:var(--soft); }
+  .legend span { display:flex; align-items:center; gap:8px; }
+  .legend i { width:18px; height:18px; border-radius:50%; border:2px solid var(--line); display:inline-block; }
+
+  /* Lições */
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:18px; }
+  .card { padding:22px 24px; }
+  .card .k { font-family:"Caveat",cursive; font-weight:700; font-size:30px; }
+  .card .q { font-weight:650; font-size:18px; margin-top:6px; line-height:1.35; }
+  .card .a { font-size:16.5px; color:#3a3e46; margin-top:8px; line-height:1.45; }
+  .card .a i { color:var(--soft); }
+  .why { font-family:"Caveat",cursive; font-weight:600; font-size:27px; color:#b5452f; margin-top:10px; line-height:1.05; }
 
   footer { margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; font-size:17px; color:var(--soft); }
   footer b { color:var(--ink); font-weight:600; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>Medindo o <span class="mark">RAG</span> com o Claude como juiz</h1>
-    <p class="sub"><b>24 perguntas com gabarito</b>: 20 que estão nos documentos da loja (2 delas de continuação, tipo "e se tiver defeito?") e <b>4 pegadinhas</b> sem resposta. O próprio Claude corrigiu cada resposta.</p>
-  </header>
+  <div class="eyebrow">meu projeto de RAG em C# · teste nº 1</div>
+  <h1>Testei meu <span class="mark">RAG</span><br>com 24 perguntas</h1>
+  <p class="sub">Cada pergunta tinha um <b>gabarito</b>, e o <b>Claude corrigiu</b> uma por uma. No meio, <b>4 pegadinhas</b> cuja resposta não está nos documentos.</p>
 
-  <div class="grid">
-    <div class="node metric bg-green"><div class="v">100%</div><div class="t">Busca</div><div class="d">o documento certo veio nos trechos encontrados</div></div>
-    <div class="node metric bg-blue" style="transform:rotate(-0.6deg)"><div class="v">95%</div><div class="t">Respostas corretas</div><div class="d">19 de 20 bateram com o gabarito</div></div>
-    <div class="node metric bg-yellow" style="transform:rotate(0.6deg)"><div class="v">95%</div><div class="t">Fidelidade</div><div class="d">não inventou nada além dos trechos</div></div>
-    <div class="node metric bg-pink" style="transform:rotate(0.5deg)"><div class="v">4/4</div><div class="t">Pegadinhas</div><div class="d">disse "não encontrei" quando não sabia</div></div>
-    <div class="node metric"><div class="v">0</div><div class="t">Recusas indevidas</div><div class="d">nunca negou algo que estava nos docs</div></div>
-    <div class="node metric bg-orange" style="transform:rotate(-0.5deg)"><div class="v">5,9s</div><div class="t">Por pergunta</div><div class="d">busca + resposta, em média</div></div>
+  <div class="top">
+    <div class="node hero">
+      <div class="v">95%</div>
+      <div class="t">das respostas corretas</div>
+      <div class="d">19 de 20 bateram com o gabarito</div>
+    </div>
+    <div class="side">
+      <div class="node mini" style="background:var(--blue)"><div class="v">100%</div><div><div class="t">Busca</div><div class="d">achou o documento certo</div></div></div>
+      <div class="node mini" style="background:var(--pink); transform:rotate(0.5deg)"><div class="v">4/4</div><div><div class="t">Pegadinhas</div><div class="d">disse "não encontrei" em todas</div></div></div>
+      <div class="node mini" style="background:var(--yellow)"><div class="v">95%</div><div><div class="t">Fidelidade</div><div class="d">ficou só no que estava escrito</div></div></div>
+      <div class="node mini" style="background:var(--orange); transform:rotate(-0.5deg)"><div class="v">5,9s</div><div><div class="t">Por resposta</div><div class="d">busca + resposta, em média</div></div></div>
+    </div>
   </div>
 
-  <h2>O que mais me ensinou</h2>
+  <h2>Cada bolinha é uma pergunta <small>na ordem do teste</small></h2>
+  <div class="dots">
+    <div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div>
+    <div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div>
+    <div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div>
+    <div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div>
+    <div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot ok">✓</div><div class="dot no">✗</div>
+    <div class="dot trap">?</div><div class="dot trap">?</div><div class="dot trap">?</div><div class="dot trap">?</div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--green)"></i>acertou</span>
+    <span><i style="background:var(--red)"></i>errou</span>
+    <span><i style="background:var(--pink)"></i>pegadinha: disse "não encontrei" ✓</span>
+  </div>
+
   <div class="cards">
     <div class="node card">
       <div class="k">✗ o único erro</div>
       <div class="q">"O caixa aceita PIX?" → "e se a internet cair, ainda funciona?"</div>
-      <div class="a">Respondeu <i>"Sim, funciona normalmente"</i> e só depois avisou que o PIX fica indisponível.</div>
-      <div class="why">pergunta de continuação é onde o RAG mais sofre</div>
+      <div class="a">Respondeu <i>"Sim, funciona normalmente"</i> e só depois avisou que o PIX para.</div>
+      <div class="why">continuação de conversa é onde o RAG mais sofre</div>
     </div>
     <div class="node card">
       <div class="k">✓ a pegadinha mais difícil</div>
       <div class="q">"A loja abre aos domingos?"</div>
-      <div class="a">Não caiu: viu que o horário de seg. a sáb. nos documentos é do <i>suporte técnico</i>, não da loja, e disse que não encontrou.</div>
+      <div class="a">Percebeu que o "seg. a sáb." dos documentos é o horário do <i>suporte</i>, não da loja, e não inventou.</div>
       <div class="why">saber dizer "não sei" vale ouro</div>
     </div>
   </div>
 
   <footer>
-    <div><b>Claude Haiku</b> (respostas e juiz) · <b>nomic-embed-text</b> (vetores) · <b>C# / .NET 8</b></div>
-    <div>base pequena: 3 documentos fictícios</div>
+    <div><b>C# / .NET 8</b> · <b>Claude Haiku</b> (respostas e juiz) · <b>Ollama</b> nomic-embed-text (busca)</div>
+    <div>base inicial: 3 documentos</div>
   </footer>
 </body>
 </html>
