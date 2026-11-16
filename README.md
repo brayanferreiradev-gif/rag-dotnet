@@ -1,6 +1,6 @@
 # Agentes + RAG em .NET: a equipe de IA da Loja Exemplo
 
-Uma **equipe de agentes de IA** feita do zero em C#, sem framework: um roteador escolhe o especialista (SAC, Caixa, Suporte ou Estoque), e cada um tem a sua **skill** (instruções, documentos que pode ler e ferramentas que pode usar). Por baixo, um **RAG** com banco vetorial busca nos documentos da loja.
+Uma **equipe de agentes de IA** feita do zero em C#, sem framework: um **orquestrador** planeja, distribui as tarefas entre os especialistas (SAC, Caixa, Suporte e Estoque), roda todos em paralelo e junta as respostas. Cada especialista tem a sua **skill** (instruções, documentos que pode ler e ferramentas que pode usar). Por baixo, um **RAG** com banco vetorial busca nos documentos da loja.
 
 Também é um assistente de chat em **ASP.NET Core 8 + Vue.js** que responde perguntas sobre os seus documentos usando **RAG** (Retrieval-Augmented Generation): busca os trechos certos num **banco vetorial** e só então pede para a IA responder, citando as fontes. Entende perguntas de continuação ("e com defeito?") usando o histórico da conversa.
 
@@ -19,32 +19,30 @@ Tem também uma **avaliação automática** ([Fase 4](#avaliação-automática))
 
 ---
 
-## Agentes com skills
+## Orquestrador e agentes com skills
+
+![Como o orquestrador funciona](assets/prints/12-orquestrador.png)
 
 ```mermaid
 flowchart LR
-    U[Pergunta] --> R{Roteador<br/>LLM lê a descrição<br/>de cada skill}
-    R --> SAC[SAC]
-    R --> CX[Caixa]
-    R --> SP[Suporte]
-    R --> ES[Estoque]
-    SAC & CX & SP & ES --> L[Loop do agente<br/>pensa → ferramenta → observa]
-    L --> T1[buscar_documentos<br/>RAG filtrado por departamento]
-    L --> T2[consultar_estoque]
-    L --> T3[consultar_pedido]
-    L --> T4[abrir_chamado]
-    L --> A[Resposta + passos + fontes]
+    U[Pergunta] --> O{Orquestrador<br/>planeja as tarefas}
+    O -->|tarefa 1| A1[Agente SAC]
+    O -->|tarefa 2| A2[Agente Estoque]
+    A1 --> T1[consultar_pedido]
+    A2 --> T2[consultar_estoque]
+    A1 & A2 --> S[Síntese<br/>junta sem inventar]
+    S --> R[Resposta + plano + passos]
 ```
 
 | Peça | Onde | O que faz |
 |---|---|---|
 | Skills | [`skills/*.md`](skills/) | Uma por departamento: cabeçalho com nome, descrição, documentos e ferramentas; corpo com as instruções. Para criar um agente novo, basta um arquivo |
-| Roteador | `Agents/AgentRunner.cs` | O LLM lê só as descrições das skills e devolve `{"agente": "sac"}` |
+| Orquestrador | `Agents/Orchestrator.cs` | **Planeja**: o LLM lê as descrições das skills e devolve `{"tarefas": [{"agente": "sac", "tarefa": "..."}]}`. Pergunta simples vira 1 tarefa; pergunta que mistura assuntos, até 3. **Delega** em paralelo (`Task.WhenAll`) e **sintetiza** as respostas sem acrescentar fatos |
 | Loop do agente | `Agents/AgentRunner.cs` | O LLM responde sempre em JSON: `{"acao": "consultar_estoque", "args": {...}}` ou `{"acao": "responder", ...}`. O código executa a ferramenta e devolve o resultado, até 4 passos. Funciona com qualquer LLM, sem *tool calling* nativo |
 | Ferramentas | `Agents/Tools.cs` | Busca nos documentos (cada agente só vê os do seu departamento), estoque e pedidos (dados fictícios em [`data/`](data/)) e abertura de chamados com protocolo |
-| Avaliação | `Eval/AgentEvalRunner.cs` | 18 perguntas: mede se o roteador acertou o agente, se ele usou a ferramenta certa e se a resposta está correta |
+| Avaliação | `Eval/AgentEvalRunner.cs` | 21 perguntas (3 que envolvem dois departamentos): mede se o plano escalou os agentes certos, se eles usaram a ferramenta certa e se a resposta está correta |
 
-Na tela, o modo **Agentes** mostra qual especialista respondeu e cada passo que ele deu.
+Na tela, o modo **Agentes** mostra o plano do orquestrador, quais especialistas trabalharam e cada passo que deram.
 
 ## Arquitetura do RAG
 
@@ -182,7 +180,7 @@ python3 tests/fake_ollama.py 11434
 ```bash
 cd src/RagApi
 dotnet run --launch-profile claude-code -- eval            # RAG: 24 perguntas
-dotnet run --launch-profile claude-code -- eval --agentes  # agentes: 18 perguntas
+dotnet run --launch-profile claude-code -- eval --agentes  # agentes: 21 perguntas
 ```
 
 No Windows, o `rodar-avaliacao.bat` na raiz faz tudo isso com dois cliques.

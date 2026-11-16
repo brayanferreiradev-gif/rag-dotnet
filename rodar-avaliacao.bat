@@ -50,7 +50,7 @@ echo.
 powershell -NoProfile -Command "dotnet run --launch-profile claude-code -- eval 2>&1 | Tee-Object -FilePath ..\..\eval\resultados\log-rag.txt"
 
 echo.
-echo [5/5] Avaliacao dos agentes: 18 perguntas (5 a 10 minutos)...
+echo [5/5] Avaliacao dos agentes: 21 perguntas (5 a 10 minutos)...
 echo.
 powershell -NoProfile -Command "dotnet run --launch-profile claude-code -- eval --agentes 2>&1 | Tee-Object -FilePath ..\..\eval\resultados\log-agentes.txt"
 
