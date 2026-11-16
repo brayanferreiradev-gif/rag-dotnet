@@ -35,7 +35,7 @@ public sealed record EvalItem(
 /// </summary>
 public static class EvalRunner
 {
-    private const string JudgeSystemPrompt = """
+    internal const string JudgeSystemPrompt = """
         Você é um avaliador rigoroso e imparcial de um assistente que responde perguntas com base em documentos.
         Responda APENAS com um objeto JSON válido, sem texto antes ou depois e sem bloco de código.
         """;
@@ -161,13 +161,13 @@ public static class EvalRunner
             correta, v.GetBool("fiel"), sw.ElapsedMilliseconds, v.Motivo);
     }
 
-    private static bool IsSetupError(Exception ex) =>
+    internal static bool IsSetupError(Exception ex) =>
         Regex.IsMatch(ex.Message, @"log ?in|/login|Não encontrei o Claude Code|não configurada|401|403|connection refused|recusou a conexão",
             RegexOptions.IgnoreCase);
 
     // ---------- Juiz ----------
 
-    private sealed record Verdict(JsonElement? Root, string Motivo)
+    internal sealed record Verdict(JsonElement? Root, string Motivo)
     {
         public bool? GetBool(string name) =>
             Root is { } r && r.TryGetProperty(name, out var p) && p.ValueKind is JsonValueKind.True or JsonValueKind.False
@@ -175,7 +175,7 @@ public static class EvalRunner
                 : null;
     }
 
-    private static async Task<Verdict> JudgeAsync(IChatService judge, string prompt)
+    internal static async Task<Verdict> JudgeAsync(IChatService judge, string prompt)
     {
         var raw = await judge.CompleteAsync(JudgeSystemPrompt, [ChatTurn.User(prompt)]);
 
