@@ -19,9 +19,10 @@ public sealed record AgentEvalQuestion(
 {
     public bool ForaDoEscopo => Esperado is null;
 
-    /// <summary>"caixa|sac" aceita qualquer um dos dois.</summary>
-    public bool AgenteOk(string agente) =>
-        Agente is null || Agente.Split('|').Any(a => a.Equals(agente, StringComparison.OrdinalIgnoreCase));
+    /// <summary>"sac+estoque" exige os dois no plano; "caixa|sac" aceita qualquer um.</summary>
+    public bool AgenteOk(IReadOnlyList<string> agentes) =>
+        Agente is null || Agente.Split('+').All(parte =>
+            parte.Split('|').Any(a => agentes.Contains(a, StringComparer.OrdinalIgnoreCase)));
 }
 
 public sealed record AgentEvalItem(
@@ -48,7 +49,7 @@ public static class AgentEvalRunner
 
         using var scope = services.CreateScope();
         var rag = scope.ServiceProvider.GetRequiredService<RagService>();
-        var agents = scope.ServiceProvider.GetRequiredService<AgentRunner>();
+        var agents = scope.ServiceProvider.GetRequiredService<Orchestrator>();
         var judge = scope.ServiceProvider.GetRequiredService<IChatService>();
 
         Console.Write("Indexando documentos… ");
@@ -88,11 +89,11 @@ public static class AgentEvalRunner
         return 0;
     }
 
-    private static async Task<AgentEvalItem> EvaluateAsync(AgentEvalQuestion q, AgentRunner agents, IChatService judge)
+    private static async Task<AgentEvalItem> EvaluateAsync(AgentEvalQuestion q, Orchestrator agents, IChatService judge)
     {
         var r = await agents.RunAsync(q.Pergunta, q.Historico);
         var tools = r.Steps.Select(s => s.Ferramenta).ToList();
-        var routing = q.AgenteOk(r.Agente);
+        var routing = q.AgenteOk(r.Agentes);
         bool? toolOk = q.Ferramenta is null ? null : tools.Contains(q.Ferramenta);
         var context = r.Context.Count == 0 ? "(nenhuma ferramenta foi usada)" : string.Join("\n\n---\n\n", r.Context);
 
