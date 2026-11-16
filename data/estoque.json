@@ -1,0 +1,92 @@
+[
+  {
+    "sku": "ELE-1001",
+    "nome": "Fone de ouvido Bluetooth Pulse X",
+    "categoria": "Eletrônicos",
+    "preco": 249.9,
+    "estoque": {
+      "Centro": 12,
+      "Shopping": 0,
+      "Bairro Norte": 3
+    }
+  },
+  {
+    "sku": "ELE-1002",
+    "nome": "Caixa de som portátil Wave Mini",
+    "categoria": "Eletrônicos",
+    "preco": 189.9,
+    "estoque": {
+      "Centro": 0,
+      "Shopping": 0,
+      "Bairro Norte": 0
+    },
+    "previsao_reposicao": "2026-11-24"
+  },
+  {
+    "sku": "ELE-1003",
+    "nome": "Smartwatch Fit 3",
+    "categoria": "Eletrônicos",
+    "preco": 599.0,
+    "estoque": {
+      "Centro": 4,
+      "Shopping": 7,
+      "Bairro Norte": 1
+    }
+  },
+  {
+    "sku": "ELE-1004",
+    "nome": "Carregador turbo USB-C 30W",
+    "categoria": "Eletrônicos",
+    "preco": 89.9,
+    "estoque": {
+      "Centro": 40,
+      "Shopping": 22,
+      "Bairro Norte": 15
+    }
+  },
+  {
+    "sku": "VES-2001",
+    "nome": "Jaqueta corta-vento Urban",
+    "categoria": "Vestuário",
+    "preco": 279.9,
+    "estoque": {
+      "Centro": 6,
+      "Shopping": 2,
+      "Bairro Norte": 0
+    }
+  },
+  {
+    "sku": "VES-2002",
+    "nome": "Tênis de corrida Run 5",
+    "categoria": "Calçados",
+    "preco": 399.9,
+    "estoque": {
+      "Centro": 0,
+      "Shopping": 5,
+      "Bairro Norte": 0
+    }
+  },
+  {
+    "sku": "CAS-3001",
+    "nome": "Cafeteira elétrica Aroma 15 xícaras",
+    "categoria": "Casa",
+    "preco": 219.0,
+    "estoque": {
+      "Centro": 9,
+      "Shopping": 0,
+      "Bairro Norte": 4
+    }
+  },
+  {
+    "sku": "CAS-3002",
+    "nome": "Air fryer Crisp 4L",
+    "categoria": "Casa",
+    "preco": 459.0,
+    "estoque": {
+      "Centro": 0,
+      "Shopping": 0,
+      "Bairro Norte": 0
+    },
+    "previsao_reposicao": "2026-12-02"
+  }
+]

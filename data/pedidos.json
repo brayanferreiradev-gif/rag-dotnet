@@ -1,0 +1,51 @@
+[
+  {
+    "numero": "10231",
+    "cliente": "Ana",
+    "data": "2026-11-03",
+    "itens": [
+      "Smartwatch Fit 3"
+    ],
+    "total": 599.0,
+    "pagamento": "Cartão de crédito 3x",
+    "status": "Entregue",
+    "entregue_em": "2026-11-07"
+  },
+  {
+    "numero": "10234",
+    "cliente": "Carlos",
+    "data": "2026-11-10",
+    "itens": [
+      "Fone de ouvido Bluetooth Pulse X",
+      "Carregador turbo USB-C 30W"
+    ],
+    "total": 339.8,
+    "pagamento": "PIX",
+    "status": "Em transporte",
+    "previsao_entrega": "2026-11-17"
+  },
+  {
+    "numero": "10240",
+    "cliente": "Juliana",
+    "data": "2026-11-12",
+    "itens": [
+      "Air fryer Crisp 4L"
+    ],
+    "total": 459.0,
+    "pagamento": "Cartão de crédito 6x",
+    "status": "Aguardando estoque",
+    "previsao_entrega": "2026-12-05"
+  },
+  {
+    "numero": "10245",
+    "cliente": "Marcos",
+    "data": "2026-11-13",
+    "itens": [
+      "Tênis de corrida Run 5"
+    ],
+    "total": 399.9,
+    "pagamento": "Cartão de débito",
+    "status": "Troca solicitada",
+    "observacao": "Cliente pediu troca de numeração (41 para 42)"
+  }
+]
