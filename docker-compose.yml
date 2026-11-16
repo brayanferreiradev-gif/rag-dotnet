@@ -29,8 +29,12 @@ services:
       Ollama__BaseUrl: http://ollama:11434
       Qdrant__BaseUrl: http://qdrant:6333
       Rag__DocsPath: /app/docs
+      Agents__SkillsPath: /app/skills
+      Agents__DataPath: /app/data
     volumes:
       - ./docs:/app/docs:ro
+      - ./skills:/app/skills:ro
+      - ./data:/app/data:ro
     depends_on:
       - qdrant
       - ollama

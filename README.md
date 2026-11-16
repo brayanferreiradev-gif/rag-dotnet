@@ -1,6 +1,8 @@
-# RAG em .NET com Qdrant e Ollama
+# Agentes + RAG em .NET: a equipe de IA da Loja Exemplo
 
-Assistente de chat em **ASP.NET Core 8 + Vue.js** que responde perguntas sobre os seus documentos usando **RAG** (Retrieval-Augmented Generation): busca os trechos certos num **banco vetorial** e só então pede para a IA responder, citando as fontes. Entende perguntas de continuação ("e com defeito?") usando o histórico da conversa.
+Uma **equipe de agentes de IA** feita do zero em C#, sem framework: um roteador escolhe o especialista (SAC, Caixa, Suporte ou Estoque), e cada um tem a sua **skill** (instruções, documentos que pode ler e ferramentas que pode usar). Por baixo, um **RAG** com banco vetorial busca nos documentos da loja.
+
+Também é um assistente de chat em **ASP.NET Core 8 + Vue.js** que responde perguntas sobre os seus documentos usando **RAG** (Retrieval-Augmented Generation): busca os trechos certos num **banco vetorial** e só então pede para a IA responder, citando as fontes. Entende perguntas de continuação ("e com defeito?") usando o histórico da conversa.
 
 ![Arquitetura e fluxo do RAG](assets/arquitetura-rag.png)
 
@@ -17,7 +19,34 @@ Tem também uma **avaliação automática** ([Fase 4](#avaliação-automática))
 
 ---
 
-## Arquitetura
+## Agentes com skills
+
+```mermaid
+flowchart LR
+    U[Pergunta] --> R{Roteador<br/>LLM lê a descrição<br/>de cada skill}
+    R --> SAC[SAC]
+    R --> CX[Caixa]
+    R --> SP[Suporte]
+    R --> ES[Estoque]
+    SAC & CX & SP & ES --> L[Loop do agente<br/>pensa → ferramenta → observa]
+    L --> T1[buscar_documentos<br/>RAG filtrado por departamento]
+    L --> T2[consultar_estoque]
+    L --> T3[consultar_pedido]
+    L --> T4[abrir_chamado]
+    L --> A[Resposta + passos + fontes]
+```
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Skills | [`skills/*.md`](skills/) | Uma por departamento: cabeçalho com nome, descrição, documentos e ferramentas; corpo com as instruções. Para criar um agente novo, basta um arquivo |
+| Roteador | `Agents/AgentRunner.cs` | O LLM lê só as descrições das skills e devolve `{"agente": "sac"}` |
+| Loop do agente | `Agents/AgentRunner.cs` | O LLM responde sempre em JSON: `{"acao": "consultar_estoque", "args": {...}}` ou `{"acao": "responder", ...}`. O código executa a ferramenta e devolve o resultado, até 4 passos. Funciona com qualquer LLM, sem *tool calling* nativo |
+| Ferramentas | `Agents/Tools.cs` | Busca nos documentos (cada agente só vê os do seu departamento), estoque e pedidos (dados fictícios em [`data/`](data/)) e abertura de chamados com protocolo |
+| Avaliação | `Eval/AgentEvalRunner.cs` | 18 perguntas: mede se o roteador acertou o agente, se ele usou a ferramenta certa e se a resposta está correta |
+
+Na tela, o modo **Agentes** mostra qual especialista respondeu e cada passo que ele deu.
+
+## Arquitetura do RAG
 
 ```mermaid
 flowchart LR
@@ -150,6 +179,16 @@ python3 tests/fake_ollama.py 11434
 
 ## Avaliação automática
 
+```bash
+cd src/RagApi
+dotnet run --launch-profile claude-code -- eval            # RAG: 24 perguntas
+dotnet run --launch-profile claude-code -- eval --agentes  # agentes: 18 perguntas
+```
+
+No Windows, o `rodar-avaliacao.bat` na raiz faz tudo isso com dois cliques.
+
+### RAG
+
 Mudar o prompt, o tamanho dos chunks ou o modelo pode melhorar ou piorar o RAG, e sem medir é só achismo. Por isso o projeto tem um gabarito em [`eval/perguntas.json`](eval/perguntas.json):
 
 - **20 perguntas com resposta nos documentos**, cada uma com a resposta esperada e o arquivo de onde ela deve sair. Duas são perguntas de continuação ("e se tiver defeito?"), com histórico.
@@ -191,6 +230,9 @@ O único erro foi numa pergunta de continuação ("e se a internet cair, ainda f
 | GET | `/health` | — | Verifica se a API está de pé |
 | POST | `/ingest/folder` | — | Indexa todos os `.md` e `.txt` de `Rag:DocsPath` |
 | POST | `/ingest` | `{ "source": "...", "text": "..." }` | Indexa um texto avulso |
+| POST | `/agent` | `{ "question": "...", "history": [...] }` | Pergunta para a equipe de agentes; devolve o agente, a resposta, os passos e as fontes |
+| GET | `/agents` | — | Lista as skills carregadas |
+| GET | `/chamados` | — | Chamados abertos pelos agentes |
 | POST | `/ask` | `{ "question": "...", "history": [{ "role": "user", "content": "..." }] }` | Responde com base nos documentos; `history` é opcional |
 | GET | `/` | — | Tela de chat |
 
@@ -232,7 +274,7 @@ Exemplo de resposta do `/ask`:
 - [ ] **Reranking** dos trechos antes de mandar ao LLM
 - [x] **Avaliação**: gabarito com 24 perguntas e LLM como juiz
 - [x] **Claude** como LLM (pela conta ou pela API) e **Voyage** para embeddings
-- [ ] **Agentes por departamento** (SAC, Caixa, Suporte, Estoque) com skills e ferramentas
+- [x] **Agentes por departamento** (SAC, Caixa, Suporte, Estoque) com skills e ferramentas
 - [ ] **OpenTelemetry**: rastrear cada etapa (reescrita, busca, LLM) com tempos
 - [ ] **Servidor MCP** para outras IAs consultarem os documentos
 - [ ] Segunda implementação de `IVectorStore` com **PostgreSQL + pgvector**
