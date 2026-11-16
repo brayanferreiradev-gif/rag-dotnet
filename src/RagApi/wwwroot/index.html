@@ -145,7 +145,7 @@
   <main ref="scroller" aria-live="polite">
     <div v-if="messages.length === 0" class="empty">
       <h2>{{ mode === 'agent' ? 'Fale com a equipe de agentes' : 'Pergunte algo sobre os documentos' }}</h2>
-      <div v-if="mode === 'agent'">Um roteador escolhe o agente (SAC, Caixa, Suporte ou Estoque), que consulta documentos, estoque, pedidos ou abre chamados.</div>
+      <div v-if="mode === 'agent'">O orquestrador planeja, delega para os agentes certos (SAC, Caixa, Suporte, Estoque) em paralelo e junta as respostas.</div>
       <div v-else>As respostas vêm só do que está na pasta <code>docs/</code>.</div>
       <div style="margin-top:6px">Clique em <b>Indexar documentos</b> na primeira vez.</div>
       <div class="chips">
@@ -155,13 +155,18 @@
 
     <div v-for="(m, i) in messages" :key="i" class="msg" :class="m.role">
       <div class="bubble">
-        <div v-if="m.agent" class="agent" :title="m.why">Agente {{ m.agent }} <small v-if="m.why">· {{ m.why }}</small></div>
+        <div v-if="m.agent" class="agent" :title="m.why">{{ m.plan?.length > 1 ? 'Orquestrador →' : 'Agente' }} {{ m.agent }}</div>
         <div>{{ m.content }}</div>
 
         <div v-if="m.role === 'assistant' && (m.rewritten || m.sources?.length || m.steps?.length)" class="meta">
+          <details v-if="m.plan?.length > 1" open>
+            <summary>Plano do orquestrador · {{ m.plan.length }} agentes em paralelo</summary>
+            <div v-for="(t, k) in m.plan" :key="k" class="step"><span class="tool">{{ k + 1 }}. {{ t.agenteTitulo }}</span>
+<span class="obs">{{ t.tarefa }}</span></div>
+          </details>
           <details v-if="m.steps?.length">
             <summary>{{ m.steps.length }} {{ m.steps.length === 1 ? 'passo' : 'passos' }} do agente · {{ (m.ms / 1000).toFixed(1) }} s</summary>
-            <div v-for="st in m.steps" :key="st.n" class="step"><span class="tool">{{ st.n }}. {{ st.ferramenta }}</span> {{ st.args }}
+            <div v-for="st in m.steps" :key="st.n" class="step"><span class="tool">{{ st.n }}. {{ st.agente }} · {{ st.ferramenta }}</span> {{ st.args }}
 <span v-if="st.pensamento" class="why">{{ st.pensamento }}</span>
 <span class="obs">→ {{ st.resultado }}</span></div>
           </details>
@@ -225,6 +230,7 @@ createApp({
         'Qual o status do pedido 10234?',
         'A maquininha do caixa 2 deu erro de comunicação. Pode abrir um chamado?',
         'Como faço a sangria do caixa?',
+        'Meu pedido 10240 está demorando. A air fryer tem em alguma loja para eu buscar hoje?',
       ],
       status: { text: '', kind: '' },
       suggestions: [
@@ -291,7 +297,7 @@ createApp({
         const rewritten = data.searchQuery && normalize(data.searchQuery) !== normalize(question) ? data.searchQuery : null;
         this.messages.push({
           role: 'assistant', content: data.answer, sources: data.sources, rewritten,
-          agent: data.agenteTitulo, why: data.motivoRoteamento, steps: data.steps, ms: data.ms,
+          agent: data.agenteTitulo, why: data.motivoRoteamento, steps: data.steps, ms: data.ms, plan: data.plano,
         });
       } catch (e) {
         this.messages.push({ role: 'error', content: 'Erro: ' + e.message });
