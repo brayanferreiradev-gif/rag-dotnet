@@ -1,37 +1,30 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using RagApi.Rag;
 
 namespace RagApi.Agents;
 
-public sealed record AgentStep(int N, string Ferramenta, string Args, string Pensamento, string Resultado, long Ms);
+/// <summary>Um passo de um agente: qual ferramenta chamou, com que argumentos e o que voltou.</summary>
+public sealed record AgentStep(int N, string Agente, string Ferramenta, string Args, string Pensamento, string Resultado, long Ms);
 
-public sealed record AgentResult(
-    string Agente, string AgenteTitulo, string MotivoRoteamento, string Answer,
-    IReadOnlyList<AgentStep> Steps, IReadOnlyList<SourceRef> Sources, long Ms)
-{
-    /// <summary>Tudo o que as ferramentas devolveram (fica fora do JSON da API; a avaliação usa para checar fidelidade).</summary>
-    [JsonIgnore] public IReadOnlyList<string> Context { get; init; } = [];
-}
+/// <summary>O que um agente (trabalhador) produziu para a sua tarefa.</summary>
+public sealed record WorkerResult(
+    string Agente, string AgenteTitulo, string Tarefa, string Answer,
+    IReadOnlyList<AgentStep> Steps, IReadOnlyList<SourceRef> Sources, IReadOnlyList<string> Context, long Ms);
 
 /// <summary>
-/// Agentes feitos à mão, sem framework:
-///  1. Roteador: um LLM lê a descrição de cada skill e escolhe o especialista.
-///  2. Loop do agente: o LLM responde sempre em JSON, pedindo uma ferramenta
-///     ({"acao": "consultar_estoque", "args": {...}}) ou dando a resposta final
-///     ({"acao": "responder", "resposta": "..."}). Nosso código executa a ferramenta,
-///     devolve o resultado como uma nova mensagem e repete, até a resposta ou o limite de passos.
-/// Funciona com qualquer LLM que siga instruções (Claude, Ollama), sem depender de "tool calling" nativo.
+/// O trabalhador: roda UMA skill numa tarefa, num loop feito à mão (sem framework).
+/// O LLM responde sempre em JSON, pedindo uma ferramenta ({"acao": "consultar_estoque", "args": {...}})
+/// ou dando a resposta final ({"acao": "responder", "resposta": "..."}). O código executa a ferramenta,
+/// devolve o resultado como nova mensagem e repete, até a resposta ou o limite de passos.
+/// Funciona com qualquer LLM que siga instruções (Claude, Ollama), sem "tool calling" nativo.
+/// Quem decide QUAL skill roda é o Orchestrator.
 /// </summary>
 public sealed class AgentRunner(
-    SkillLibrary skills,
     IEnumerable<IAgentTool> tools,
     IChatService chat,
     IOptions<AgentOptions> options,
-    IOptions<RagOptions> ragOptions,
     ILogger<AgentRunner> logger)
 {
     private static readonly JsonSerializerOptions ReadableJson = new()
@@ -42,19 +35,12 @@ public sealed class AgentRunner(
     private readonly Dictionary<string, IAgentTool> _tools = tools.ToDictionary(t => t.Name);
     private readonly AgentOptions _opt = options.Value;
 
-    public async Task<AgentResult> RunAsync(string question, IReadOnlyList<ChatTurn>? history = null, CancellationToken ct = default)
+    public async Task<WorkerResult> RunSkillAsync(
+        Skill skill, string task, IReadOnlyList<ChatTurn> history, CancellationToken ct = default)
     {
         var total = Stopwatch.StartNew();
-        var recent = (history ?? [])
-            .Where(t => t.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(t.Content))
-            .TakeLast(ragOptions.Value.MaxHistoryMessages)
-            .ToList();
-
-        var (skill, motivo) = await RouteAsync(question, recent, ct);
-        logger.LogInformation("Roteador → {Skill} ({Motivo})", skill.Nome, motivo);
-
         var system = BuildSystemPrompt(skill);
-        var messages = recent.Append(ChatTurn.User(question)).ToList();
+        var messages = history.Append(ChatTurn.User(task)).ToList();
         var steps = new List<AgentStep>();
         var sources = new List<SourceRef>();
         var context = new List<string>();
@@ -71,8 +57,8 @@ public sealed class AgentRunner(
             if (action is null || action.Acao == "responder" || i > _opt.MaxSteps)
             {
                 var answer = action?.Resposta ?? StripJson(raw);
-                return new AgentResult(skill.Nome, skill.Titulo, motivo, answer, steps, Renumber(sources), total.ElapsedMilliseconds)
-                    { Context = context };
+                logger.LogInformation("Agente {Skill}: {Steps} passos", skill.Nome, steps.Count);
+                return new WorkerResult(skill.Nome, skill.Titulo, task, answer, steps, sources, context, total.ElapsedMilliseconds);
             }
 
             var sw = Stopwatch.StartNew();
@@ -90,7 +76,8 @@ public sealed class AgentRunner(
             }
             sw.Stop();
 
-            steps.Add(new AgentStep(i, action.Acao, action.Args.ValueKind == JsonValueKind.Undefined ? "{}" : JsonSerializer.Serialize(action.Args, ReadableJson),
+            steps.Add(new AgentStep(i, skill.Nome, action.Acao,
+                action.Args.ValueKind == JsonValueKind.Undefined ? "{}" : JsonSerializer.Serialize(action.Args, ReadableJson),
                 action.Pensamento ?? "", Shorten(observation, 400), sw.ElapsedMilliseconds));
 
             messages.Add(ChatTurn.Assistant(raw));
@@ -98,37 +85,6 @@ public sealed class AgentRunner(
         }
 
         throw new InvalidOperationException("Loop do agente terminou sem resposta."); // inalcançável
-    }
-
-    // ---------- Roteador ----------
-
-    private async Task<(Skill Skill, string Motivo)> RouteAsync(string question, List<ChatTurn> history, CancellationToken ct)
-    {
-        var catalog = string.Join("\n", skills.Skills.Select(s => $"- {s.Nome}: {s.Descricao}"));
-        var system = $$"""
-            Você é o roteador de atendimento da Loja Exemplo. Escolha o agente mais adequado para a mensagem do usuário.
-
-            Agentes disponíveis:
-            {{catalog}}
-
-            Responda APENAS com JSON: {"agente": "<nome>", "motivo": "frase curta"}
-            """;
-
-        var prompt = new StringBuilder();
-        foreach (var t in history.TakeLast(4))
-            prompt.Append(t.Role == "user" ? "Usuário: " : "Assistente: ").Append(Shorten(t.Content, 300)).Append('\n');
-        prompt.Append(history.Count > 0 ? "\nMensagem atual: " : "").Append(question);
-
-        var raw = await chat.CompleteAsync(system, [ChatTurn.User(prompt.ToString())], ct);
-        var json = AgentAction.ExtractJson(raw);
-        var nome = json?.TryGetProperty("agente", out var a) == true ? a.GetString() : null;
-        var motivo = json?.TryGetProperty("motivo", out var m) == true ? m.GetString() ?? "" : "";
-
-        // Se o roteador devolver algo inesperado, procura um nome de skill no texto; senão, SAC.
-        var skill = skills.Find(nome)
-                    ?? skills.Skills.FirstOrDefault(s => raw.Contains(s.Nome, StringComparison.OrdinalIgnoreCase))
-                    ?? skills.Find("sac") ?? skills.Skills[0];
-        return (skill, motivo);
     }
 
     // ---------- Prompt do agente ----------
@@ -159,12 +115,6 @@ public sealed class AgentRunner(
     }
 
     // ---------- Utilitários ----------
-
-    private static IReadOnlyList<SourceRef> Renumber(List<SourceRef> sources) =>
-        sources
-            .GroupBy(s => (s.Source, s.ChunkIndex))
-            .Select((g, i) => g.First() with { Ref = i + 1 })
-            .ToList();
 
     private static string StripJson(string raw) => raw.Trim().Trim('`').Trim();
 

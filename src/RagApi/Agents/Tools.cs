@@ -93,7 +93,7 @@ public sealed class ConsultarPedidoTool(StoreData data) : IAgentTool
         var pedido = data.Pedidos.FirstOrDefault(p => p.Numero == numero);
         return Task.FromResult(new ToolResult(pedido is null
             ? $"Pedido \"{numero}\" não encontrado."
-            : pedido.Dados.GetRawText()));
+            : JsonSerializer.Serialize(pedido.Dados, StoreData.Compact)));
     }
 }
 
@@ -134,6 +134,12 @@ public sealed record Chamado(string Protocolo, string Setor, string Titulo, stri
 /// </summary>
 public sealed class StoreData
 {
+    /// <summary>JSON numa linha só e com acentos legíveis, para o LLM e para a tela.</summary>
+    public static readonly JsonSerializerOptions Compact = new()
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
     public IReadOnlyList<Produto> Produtos { get; }
     public IReadOnlyList<PedidoView> Pedidos { get; }
     private readonly ConcurrentQueue<Chamado> _chamados = new();
