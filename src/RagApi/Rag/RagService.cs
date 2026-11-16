@@ -116,7 +116,7 @@ public sealed partial class RagService(
         var searchQuery = recent.Count == 0 ? question : await CondenseQuestionAsync(question, recent, ct);
 
         var queryVector = (await embeddings.EmbedAsync([searchQuery], EmbeddingInput.Query, ct))[0];
-        var hits = (await store.SearchAsync(queryVector, _opt.TopK, ct))
+        var hits = (await store.SearchAsync(queryVector, _opt.TopK, ct: ct))
             .Where(h => h.Score >= _opt.MinScore)
             .ToList();
 
@@ -131,6 +131,16 @@ public sealed partial class RagService(
             i + 1, h.Source, h.ChunkIndex, Math.Round(h.Score, 3), Preview(h.Text))).ToList();
 
         return new AskResult(answer, sources, searchQuery) { Context = hits.Select(h => h.Text).ToList() };
+    }
+
+    /// <summary>Só a parte de busca do RAG (sem LLM). Usada pela ferramenta buscar_documentos dos agentes.</summary>
+    public async Task<IReadOnlyList<SearchHit>> RetrieveAsync(
+        string query, IReadOnlyCollection<string>? sources = null, CancellationToken ct = default)
+    {
+        var vector = (await embeddings.EmbedAsync([query], EmbeddingInput.Query, ct))[0];
+        return (await store.SearchAsync(vector, _opt.TopK, sources, ct))
+            .Where(h => h.Score >= _opt.MinScore)
+            .ToList();
     }
 
     private const string CondensePrompt = """
