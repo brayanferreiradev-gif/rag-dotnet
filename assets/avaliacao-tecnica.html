@@ -8,137 +8,68 @@
   @font-face { font-family: In; src: url(fonts/inter-latin-400-normal.woff2); font-weight: 400; }
   @font-face { font-family: In; src: url(fonts/inter-latin-600-normal.woff2); font-weight: 600; }
   @font-face { font-family: In; src: url(fonts/inter-latin-700-normal.woff2); font-weight: 700; }
-  :root { --bg:#0e1014; --card:#161920; --card2:#1c2029; --line:#2a2f3a; --text:#e7e9ee; --muted:#8b93a3; --dim:#5d6575;
-          --blue:#5b8cff; --green:#3ecf8e; --red:#f16a6a; --amber:#f5a524; --violet:#a78bfa; --cyan:#2aacb8; }
+  :root { --bg:#0e1014; --card:#161920; --line:#2a2f3a; --text:#e7e9ee; --muted:#8b93a3;
+          --blue:#5b8cff; --green:#3ecf8e; --violet:#a78bfa; --amber:#f5a524; --cyan:#2aacb8; }
   * { margin:0; box-sizing:border-box; }
   body { width:1200px; height:1500px; background:var(--bg); color:var(--text); font-family:In, sans-serif;
-         padding:52px 56px 44px; display:flex; flex-direction:column; gap:22px;
-         background-image: radial-gradient(circle at 100% 0%, rgba(91,140,255,.13), transparent 40%); }
-  .mono { font-family: JB, monospace; }
-  .eyebrow { font: 600 14px JB, monospace; color:var(--blue); letter-spacing:.06em; }
-  h1 { font-size:46px; font-weight:700; letter-spacing:-.02em; line-height:1.08; margin-top:8px; }
-  h1 span { color:var(--blue); }
-  .sub { color:var(--muted); font-size:18px; margin-top:10px; line-height:1.45; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
-  .label { font: 600 12.5px JB, monospace; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; }
+         padding:60px 80px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;
+         background-image: radial-gradient(circle at 50% 0%, rgba(91,140,255,.14), transparent 45%); }
+  .eyebrow { font: 600 17px JB, monospace; color:var(--blue); letter-spacing:.08em; text-transform:uppercase; }
+  h1 { font-size:72px; font-weight:700; letter-spacing:-.025em; margin-top:12px; text-align:center; }
 
-  /* config */
-  .cfg { display:grid; grid-template-columns:repeat(3,1fr); gap:10px 22px; font: 14px/1.4 JB, monospace; }
-  .cfg div span { color:var(--dim); } .cfg div b { color:var(--text); font-weight:400; }
+  .flow { display:flex; flex-direction:column; align-items:center; width:100%; margin-top:70px; }
+  .step { width:940px; display:flex; align-items:center; gap:26px; background:var(--card);
+          border:1px solid var(--line); border-radius:20px; padding:34px 38px; }
+  .n { width:68px; height:68px; border-radius:14px; display:grid; place-items:center;
+       font: 700 28px JB, monospace; flex:none; }
+  .t { font-size:31px; font-weight:600; }
+  .d { font-size:21px; color:var(--muted); margin-top:6px; }
+  .d code { font: 18px JB, monospace; color:var(--text); }
+  .arrow { height:62px; width:2px; background:linear-gradient(var(--line), #3a4150); position:relative; }
+  .arrow::after { content:""; position:absolute; bottom:-2px; left:-6px; border:7px solid transparent; border-top-color:#3a4150; }
 
-  /* pipeline */
-  .pipe { display:flex; align-items:center; gap:0; font: 13px JB, monospace; }
-  .st { flex:1 !important; background:var(--card2); border:1px solid var(--line); border-radius:9px; padding:9px 10px; text-align:center; flex:none; }
-  .st small { display:block; color:var(--dim); font-size:11px; margin-top:3px; }
-  .st.llm { border-color: rgba(167,139,250,.55); } .st.vec { border-color: rgba(42,172,184,.55); } .st.judge { border-color: rgba(245,165,36,.6); }
-  .ar { color:var(--dim); width:22px; text-align:center; flex:none; }
+  .result { width:940px; margin-top:0; border-radius:20px; padding:40px 36px 36px;
+            background:linear-gradient(180deg, rgba(62,207,142,.10), rgba(62,207,142,.03));
+            border:1px solid rgba(62,207,142,.45); }
+  .result .lbl { font: 600 16px JB, monospace; color:var(--green); letter-spacing:.08em; text-transform:uppercase; text-align:center; }
+  .nums { display:grid; grid-template-columns:repeat(3,1fr); margin-top:16px; text-align:center; }
+  .nums div + div { border-left:1px solid rgba(62,207,142,.25); }
+  .nums b { display:block; font: 700 76px JB, monospace; letter-spacing:-.02em; }
+  .nums span { font-size:20px; color:var(--muted); }
 
-  /* métricas */
-  table { width:100%; border-collapse:collapse; font-size:15px; }
-  th { text-align:left; font: 600 12px JB, monospace; color:var(--dim); letter-spacing:.06em; text-transform:uppercase; padding:0 0 10px; }
-  td { padding:10px 0; border-top:1px solid var(--line); vertical-align:middle; }
-  td.m { font-weight:600; width:250px; }
-  td.v { font: 700 22px JB, monospace; width:120px; }
-  td.n { font: 14px JB, monospace; color:var(--muted); width:90px; }
-  td.d { color:var(--muted); font-size:14.5px; }
-  .bar { height:6px; background:var(--card2); border-radius:3px; margin-top:6px; width:96px; overflow:hidden; }
-  .bar i { display:block; height:100%; background:var(--green); }
-  .ok { color:var(--green); } .warn { color:var(--amber); }
-
-  /* análise */
-  .two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  pre.json { font: 13px/1.6 JB, monospace; white-space:pre-wrap; color:var(--text); }
-  .k { color:var(--violet); } .s { color:#6aab73; } .f { color:var(--red); } .t { color:var(--green); }
-  .an p { font-size:14.5px; line-height:1.5; color:#c9ced8; }
-  .an p + p { margin-top:10px; }
-  .an b { color:var(--text); }
-  .tag { display:inline-block; font: 600 11.5px JB, monospace; padding:3px 7px; border-radius:6px; margin-right:6px; }
-  .tag.r { background:rgba(241,106,106,.14); color:var(--red); } .tag.a { background:rgba(245,165,36,.14); color:var(--amber); }
-
-  .qs { display:grid; grid-template-columns:repeat(12,1fr); gap:8px; }
-  .q { border-radius:8px; padding:8px 0 7px; text-align:center; font: 12px JB, monospace; border:1px solid var(--line); background:var(--card2); }
-  .q b { display:block; font-size:13px; font-weight:700; margin-bottom:2px; }
-  .q.g { border-color:rgba(62,207,142,.5); } .q.g b { color:var(--green); }
-  .q.a { border-color:rgba(245,165,36,.6); } .q.a b { color:var(--amber); }
-  .q.r { border-color:rgba(241,106,106,.6); } .q.r b { color:var(--red); }
-  .q.v { border-color:rgba(167,139,250,.55); } .q.v b { color:var(--violet); }
-  .q span { color:var(--muted); }
-  .leg { display:flex; gap:22px; margin-top:12px; font: 12.5px JB, monospace; color:var(--muted); }
-  .leg i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; }
-  footer { margin-top:auto; display:flex; justify-content:space-between; font: 13px JB, monospace; color:var(--dim); }
+  footer { position:absolute; bottom:56px; left:0; right:0; font: 16px JB, monospace; color:#5d6575; text-align:center; }
 </style>
 </head>
 <body>
-  <header>
-    <div class="eyebrow">rag-dotnet · eval run 2026-11-15 21:52 · LLM-as-a-judge</div>
-    <h1>Avaliação automática do RAG: <span>95% de acerto</span> em 24 perguntas</h1>
-    <p class="sub">Gabarito com 20 perguntas respondíveis (2 multi-turn) e 4 fora do escopo. Cada resposta foi corrigida por um LLM juiz com saída em JSON.</p>
-  </header>
+  <div class="eyebrow">LLM-as-a-judge</div>
+  <h1>Como avaliei meu RAG</h1>
 
-  <section class="card">
-    <div class="label">configuração</div>
-    <div class="cfg">
-      <div><span>llm</span> <b>claude-haiku · CLI</b></div>
-      <div><span>embeddings</span> <b>nomic-embed-text · 768d</b></div>
-      <div><span>vector store</span> <b>in-memory · cosseno</b></div>
-      <div><span>chunking</span> <b>800 chars · overlap 150</b></div>
-      <div><span>top_k</span> <b>4</b> &nbsp;<span>min_score</span> <b>0.35</b></div>
-      <div><span>history</span> <b>6 msgs · query rewrite</b></div>
+  <div class="flow">
+    <div class="step">
+      <div class="n" style="background:rgba(91,140,255,.16); color:var(--blue)">1</div>
+      <div><div class="t">24 perguntas com gabarito</div><div class="d">20 com resposta nos documentos e 4 pegadinhas</div></div>
     </div>
-  </section>
-
-  <section class="card">
-    <div class="label">pipeline de uma pergunta</div>
-    <div class="pipe">
-      <div class="st">pergunta<small>+ histórico</small></div><div class="ar">→</div>
-      <div class="st llm">rewrite<small>se multi-turn</small></div><div class="ar">→</div>
-      <div class="st vec">embed<small>query</small></div><div class="ar">→</div>
-      <div class="st vec">top-k<small>cosseno</small></div><div class="ar">→</div>
-      <div class="st">score ≥ 0.35?<small>senão: "não encontrei"</small></div><div class="ar">→</div>
-      <div class="st llm">LLM<small>contexto [1..k]</small></div><div class="ar">→</div>
-      <div class="st judge">juiz<small>JSON</small></div>
+    <div class="arrow"></div>
+    <div class="step">
+      <div class="n" style="background:rgba(42,172,184,.16); color:var(--cyan)">2</div>
+      <div><div class="t">O RAG responde</div><div class="d">busca os trechos e o Claude escreve a resposta</div></div>
     </div>
-  </section>
-
-  <section class="card">
-    <div class="label">métricas</div>
-    <table>
-      <tr><th>métrica</th><th>valor</th><th>n</th><th>definição</th></tr>
-      <tr><td class="m">Retrieval hit@4</td><td class="v ok">100%<div class="bar"><i style="width:100%"></i></div></td><td class="n">20/20</td><td class="d">o documento do gabarito está entre os k trechos</td></tr>
-      <tr><td class="m">Answer correctness</td><td class="v ok">95%<div class="bar"><i style="width:95%"></i></div></td><td class="n">19/20</td><td class="d">juiz: resposta contém a informação do gabarito</td></tr>
-      <tr><td class="m">Faithfulness</td><td class="v ok">95%<div class="bar"><i style="width:95%"></i></div></td><td class="n">19/20</td><td class="d">juiz: toda afirmação está apoiada nos trechos</td></tr>
-      <tr><td class="m">Refusal accuracy</td><td class="v ok">100%<div class="bar"><i style="width:100%"></i></div></td><td class="n">4/4</td><td class="d">fora do escopo → recusou em vez de inventar</td></tr>
-      <tr><td class="m">False refusal rate</td><td class="v ok">0%</td><td class="n">0/20</td><td class="d">recusou algo que estava nos documentos</td></tr>
-      <tr><td class="m">Latência</td><td class="v">5.9s</td><td class="n">p100 7.7s</td><td class="d">média por pergunta (embed + busca + LLM)</td></tr>
-    </table>
-  </section>
-
-  <section class="card">
-    <div class="label">resultado por pergunta · latência</div>
-    <div class="qs"><div class="q g"><b>q01 ✓</b><span>7.7s</span></div><div class="q g"><b>q02 ✓</b><span>6.8s</span></div><div class="q g"><b>q03 ✓</b><span>5.6s</span></div><div class="q g"><b>q04 ✓</b><span>6.7s</span></div><div class="q g"><b>q05 ✓</b><span>6.0s</span></div><div class="q g"><b>q06 ✓</b><span>4.8s</span></div><div class="q g"><b>q07 ✓</b><span>6.5s</span></div><div class="q g"><b>q08 ✓</b><span>5.0s</span></div><div class="q g"><b>q09 ✓</b><span>5.2s</span></div><div class="q g"><b>q10 ✓</b><span>4.3s</span></div><div class="q g"><b>q11 ✓</b><span>5.1s</span></div><div class="q g"><b>q12 ✓</b><span>5.6s</span></div><div class="q g"><b>q13 ✓</b><span>4.7s</span></div><div class="q g"><b>q14 ✓</b><span>5.4s</span></div><div class="q g"><b>q15 ✓</b><span>5.3s</span></div><div class="q a"><b>q16 ✓*</b><span>6.2s</span></div><div class="q g"><b>q17 ✓</b><span>6.7s</span></div><div class="q g"><b>q18 ✓</b><span>5.2s</span></div><div class="q g"><b>q19 ✓</b><span>6.7s</span></div><div class="q r"><b>q20 ✗</b><span>6.1s</span></div><div class="q v"><b>q21 ∅</b><span>5.5s</span></div><div class="q v"><b>q22 ∅</b><span>6.7s</span></div><div class="q v"><b>q23 ∅</b><span>6.3s</span></div><div class="q v"><b>q24 ∅</b><span>7.2s</span></div></div>
-    <div class="leg"><span><i style="background:var(--green)"></i>correta e fiel</span><span><i style="background:var(--amber)"></i>correta, não fiel</span><span><i style="background:var(--red)"></i>incorreta</span><span><i style="background:var(--violet)"></i>fora do escopo → recusou</span><span>q19–q20: multi-turn</span></div>
-  </section>
-
-  <section class="two">
-    <div class="card">
-      <div class="label">saída real do juiz · conversa-pix-offline</div>
-<pre class="json">{
-  <span class="k">"correta"</span>: <span class="f">false</span>,
-  <span class="k">"fiel"</span>: <span class="t">true</span>,
-  <span class="k">"motivo"</span>: <span class="s">"Resposta principal ('Sim, funciona
-  normalmente') contradiz o gabarito ('Não')."</span>
-}</pre>
+    <div class="arrow"></div>
+    <div class="step">
+      <div class="n" style="background:rgba(167,139,250,.16); color:var(--violet)">3</div>
+      <div><div class="t">Outro Claude corrige</div><div class="d">compara com o gabarito e devolve <code>{"correta": true, "fiel": true}</code></div></div>
     </div>
-    <div class="card an">
-      <div class="label">análise de erros</div>
-      <p><span class="tag r">correctness</span><b>Multi-turn.</b> "e se a internet cair?" após uma pergunta sobre PIX: o contexto certo veio, mas a resposta focou no sistema e não no PIX.</p>
-      <p><span class="tag a">faithfulness</span><b>Inferência.</b> Afirmou que "só dinheiro e cartão" funcionam offline: dedução lógica, mas não está escrita no documento.</p>
+    <div class="arrow"></div>
+    <div class="result">
+      <div class="lbl">resultado</div>
+      <div class="nums">
+        <div><b>95%</b><span>respostas corretas</span></div>
+        <div><b>100%</b><span>busca certa</span></div>
+        <div><b>4/4</b><span>pegadinhas recusadas</span></div>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <footer>
-    <span>C# · .NET 8 · zero NuGet · HttpClient + System.Diagnostics.Process</span>
-    <span>⚠ base pequena: 6 chunks, top_k 4 → hit@4 é otimista</span>
-  </footer>
+  <footer>C# · .NET 8 · Claude Haiku · nomic-embed-text</footer>
 </body>
 </html>
