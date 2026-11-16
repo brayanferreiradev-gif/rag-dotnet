@@ -93,7 +93,7 @@ public static class ServiceRegistration
 
         services.AddScoped<RagService>();
 
-        // ---- Agentes: skills (uma por departamento), ferramentas e o loop ----
+        // ---- Agentes: skills (uma por departamento), ferramentas, o loop e o orquestrador ----
         services.Configure<AgentOptions>(config.GetSection("Agents"));
         services.AddSingleton<SkillLibrary>();
         services.AddSingleton<StoreData>();
@@ -102,6 +102,7 @@ public static class ServiceRegistration
         services.AddScoped<IAgentTool, ConsultarPedidoTool>();
         services.AddScoped<IAgentTool, AbrirChamadoTool>();
         services.AddScoped<AgentRunner>();
+        services.AddScoped<Orchestrator>();
 
         return new Providers(llm, llmModel, embeddings, embeddingModel, vectorStore);
     }

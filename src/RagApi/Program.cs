@@ -57,8 +57,8 @@ app.MapPost("/ask", async (AskRequest req, RagService rag, CancellationToken ct)
     return Results.Ok(await rag.AskAsync(req.Question.Trim(), req.History, ct));
 });
 
-// Pergunta para a equipe de agentes: o roteador escolhe o especialista, que usa ferramentas.
-app.MapPost("/agent", async (AskRequest req, AgentRunner agents, CancellationToken ct) =>
+// Pergunta para a equipe de agentes: o orquestrador planeja, delega aos especialistas e junta as respostas.
+app.MapPost("/agent", async (AskRequest req, Orchestrator agents, CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(req.Question))
         return Results.BadRequest(new { error = "Informe 'question'." });
